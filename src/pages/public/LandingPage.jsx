@@ -90,9 +90,9 @@ export const LandingPage = () => {
               <button
                 type="button"
                 onClick={handleInstallClick}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-primary-600 text-primary-600 hover:bg-primary-600 hover:text-white transition-all text-[11px] sm:text-xs font-bold tracking-wider whitespace-nowrap shadow-2xs cursor-pointer"
+                className="flex items-center gap-1 px-2.5 py-1 rounded-md border border-primary-600 text-primary-600 hover:bg-primary-600 hover:text-white transition-all text-[10px] font-bold tracking-wider whitespace-nowrap shadow-2xs cursor-pointer"
               >
-                <Download size={13} className="shrink-0" />
+                <Download size={11} className="shrink-0" />
                 <span>INSTALL APP</span>
               </button>
             )}
