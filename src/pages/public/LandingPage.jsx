@@ -73,15 +73,15 @@ export const LandingPage = () => {
           1. HEADER (Logo + PWA Install App Button + Login / Register)
       ─────────────────────────────────────────────────────────────── */}
       <header className="w-full bg-white border-b border-slate-200/80 sticky top-0 z-40 shrink-0">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-2">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-3">
           
           {/* Left: Logo & PWA Install App Button */}
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-3">
             <Link to="/" className="flex items-center group shrink-0">
               <img
                 src={logo}
                 alt="Mono Mathematics"
-                className="w-7 h-7 sm:w-8 sm:h-8 object-contain drop-shadow-xs group-hover:scale-105 transition-transform"
+                className="w-8 h-8 sm:w-9 sm:h-9 object-contain drop-shadow-xs group-hover:scale-105 transition-transform"
               />
             </Link>
 
@@ -90,7 +90,7 @@ export const LandingPage = () => {
               <button
                 type="button"
                 onClick={handleInstallClick}
-                className="flex items-center gap-1 px-2 py-1 rounded-md border border-primary-600 text-primary-600 hover:bg-primary-600 hover:text-white transition-all text-[10px] font-bold tracking-wider whitespace-nowrap shadow-2xs cursor-pointer shrink-0"
+                className="flex items-center gap-1 px-2.5 py-1 rounded-md border border-primary-600 text-primary-600 hover:bg-primary-600 hover:text-white transition-all text-[10px] font-bold tracking-wider whitespace-nowrap shadow-2xs cursor-pointer"
               >
                 <Download size={11} className="shrink-0" />
                 <span>INSTALL APP</span>
@@ -99,7 +99,7 @@ export const LandingPage = () => {
           </div>
 
           {/* Right Header Navigation Buttons */}
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
             {/* Desktop Contact Us CTA */}
             <button
               type="button"
@@ -110,15 +110,14 @@ export const LandingPage = () => {
               <span>Contact Us</span>
             </button>
 
-            {/* Login / Register Button (Responsive label so it never collides on small mobile) */}
-            <Link to="/login" className="shrink-0">
+            {/* Login / Register Button (Matching Admin Button Scale) */}
+            <Link to="/login">
               <button
                 type="button"
-                className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold text-white bg-primary-600 hover:bg-primary-700 active:bg-primary-800 transition-all cursor-pointer shadow-xs whitespace-nowrap shrink-0"
+                className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold text-white bg-primary-600 hover:bg-primary-700 active:bg-primary-800 transition-all cursor-pointer shadow-xs whitespace-nowrap"
               >
                 <LogIn className="w-3.5 h-3.5 shrink-0" />
-                <span className="inline sm:hidden">{deferredPrompt ? 'Login' : 'Login / Register'}</span>
-                <span className="hidden sm:inline">Login / Register</span>
+                <span>Login / Register</span>
               </button>
             </Link>
           </div>
