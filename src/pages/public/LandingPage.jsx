@@ -24,6 +24,7 @@ export const LandingPage = () => {
   const navigate = useNavigate();
   const { authStatus, isAuthenticated } = useAuth();
   const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [isInstalled, setIsInstalled] = useState(false);
 
   // If already authenticated and active, route directly to Dashboard
   useEffect(() => {
@@ -32,8 +33,12 @@ export const LandingPage = () => {
     }
   }, [isAuthenticated, authStatus, navigate]);
 
-  // PWA Install Prompt Listener (Same robust pattern as Food Junction)
+  // PWA Install Prompt Listener & Standalone Mode Detection
   useEffect(() => {
+    // Check if already opened inside installed standalone PWA
+    const isStandaloneMode = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    setIsInstalled(isStandaloneMode);
+
     const handleBeforeInstallPrompt = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
@@ -41,6 +46,7 @@ export const LandingPage = () => {
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', () => {
+      setIsInstalled(true);
       setDeferredPrompt(null);
     });
 
@@ -50,11 +56,16 @@ export const LandingPage = () => {
   }, []);
 
   const handleInstallClick = async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') {
-      setDeferredPrompt(null);
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setIsInstalled(true);
+        setDeferredPrompt(null);
+      }
+    } else {
+      // Direct instruction fallback for iOS Safari or Chrome desktop address-bar install
+      alert('To install Mono Mathematics App:\n\n1. In Chrome / Edge: Click the Install icon in your browser address bar (or Menu ➔ "Install App")\n2. In Safari (iOS): Tap Share (⬆) ➔ "Add to Home Screen"');
     }
   };
 
@@ -85,8 +96,8 @@ export const LandingPage = () => {
               />
             </Link>
 
-            {/* PWA Install Button (Right of Logo, Auto-Hides when installed) */}
-            {deferredPrompt && (
+            {/* PWA Install Button (Right of Logo, Auto-Hides when already installed) */}
+            {!isInstalled && (
               <button
                 type="button"
                 onClick={handleInstallClick}
