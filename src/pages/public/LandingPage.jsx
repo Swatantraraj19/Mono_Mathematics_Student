@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   GraduationCap,
@@ -14,6 +14,7 @@ import {
   Star,
   MessageCircle,
   LogIn,
+  Download,
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import logo from '../../assets/logo.png';
@@ -22,6 +23,7 @@ import heroImg from '../../assets/hero-illustration.jpg';
 export const LandingPage = () => {
   const navigate = useNavigate();
   const { authStatus, isAuthenticated } = useAuth();
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
 
   // If already authenticated and active, route directly to Dashboard
   useEffect(() => {
@@ -29,6 +31,32 @@ export const LandingPage = () => {
       navigate('/dashboard', { replace: true });
     }
   }, [isAuthenticated, authStatus, navigate]);
+
+  // PWA Install Prompt Listener (Same robust pattern as Food Junction)
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', () => {
+      setDeferredPrompt(null);
+    });
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+    }
+  };
 
   const handleCall = (phoneNumber) => {
     window.location.href = `tel:${phoneNumber}`;
@@ -42,22 +70,33 @@ export const LandingPage = () => {
     <div className="min-h-screen w-full bg-[#F8FAFC] text-slate-900 font-sans flex flex-col antialiased selection:bg-indigo-100 selection:text-primary-800">
       
       {/* ─────────────────────────────────────────────────────────────
-          1. HEADER (Exact Admin App Sizing & Polish)
+          1. HEADER (Logo + PWA Install App Button + Login / Register)
       ─────────────────────────────────────────────────────────────── */}
       <header className="w-full bg-white border-b border-slate-200/80 sticky top-0 z-40 shrink-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-3">
           
-          {/* Logo & Brand Name */}
-          <Link to="/" className="flex items-center gap-2.5 group shrink-0">
-            <img
-              src={logo}
-              alt="Mono Mathematics"
-              className="w-7 h-7 sm:w-8 sm:h-8 object-contain drop-shadow-xs group-hover:scale-105 transition-transform"
-            />
-            <span className="text-sm sm:text-base font-bold text-slate-900 tracking-tight">
-              Mono Mathematics <span className="hidden sm:inline">Classes</span>
-            </span>
-          </Link>
+          {/* Left: Logo & PWA Install App Button */}
+          <div className="flex items-center gap-3">
+            <Link to="/" className="flex items-center group shrink-0">
+              <img
+                src={logo}
+                alt="Mono Mathematics"
+                className="w-8 h-8 sm:w-9 sm:h-9 object-contain drop-shadow-xs group-hover:scale-105 transition-transform"
+              />
+            </Link>
+
+            {/* PWA Install Button (Right of Logo, Auto-Hides when installed) */}
+            {deferredPrompt && (
+              <button
+                type="button"
+                onClick={handleInstallClick}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-primary-600 text-primary-600 hover:bg-primary-600 hover:text-white transition-all text-[11px] sm:text-xs font-bold tracking-wider whitespace-nowrap shadow-2xs cursor-pointer"
+              >
+                <Download size={13} className="shrink-0" />
+                <span>INSTALL APP</span>
+              </button>
+            )}
+          </div>
 
           {/* Right Header Navigation Buttons */}
           <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
