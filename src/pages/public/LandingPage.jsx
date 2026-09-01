@@ -23,8 +23,7 @@ import heroImg from '../../assets/hero-illustration.jpg';
 export const LandingPage = () => {
   const navigate = useNavigate();
   const { authStatus, isAuthenticated } = useAuth();
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
-  const [isInstalled, setIsInstalled] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState(window.deferredPrompt || null);
 
   // If already authenticated and active, route directly to Dashboard
   useEffect(() => {
@@ -33,34 +32,42 @@ export const LandingPage = () => {
     }
   }, [isAuthenticated, authStatus, navigate]);
 
-  // PWA Install Prompt Listener & Standalone Mode Detection
+  // PWA Install Prompt Listener (Identical to Food Junction logic)
   useEffect(() => {
-    // Check if already opened inside installed standalone PWA
-    const isStandaloneMode = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-    setIsInstalled(isStandaloneMode);
+    if (window.deferredPrompt) {
+      setDeferredPrompt(window.deferredPrompt);
+    }
+
+    const handlePromptReady = () => {
+      setDeferredPrompt(window.deferredPrompt);
+    };
 
     const handleBeforeInstallPrompt = (e) => {
       e.preventDefault();
+      window.deferredPrompt = e;
       setDeferredPrompt(e);
     };
 
+    window.addEventListener('pwa-prompt-ready', handlePromptReady);
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', () => {
-      setIsInstalled(true);
+      window.deferredPrompt = null;
       setDeferredPrompt(null);
     });
 
     return () => {
+      window.removeEventListener('pwa-prompt-ready', handlePromptReady);
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     };
   }, []);
 
   const handleInstallClick = async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
+    const promptEvent = deferredPrompt || window.deferredPrompt;
+    if (!promptEvent) return;
+    promptEvent.prompt();
+    const { outcome } = await promptEvent.userChoice;
     if (outcome === 'accepted') {
-      setIsInstalled(true);
+      window.deferredPrompt = null;
       setDeferredPrompt(null);
     }
   };
@@ -92,8 +99,8 @@ export const LandingPage = () => {
               />
             </Link>
 
-            {/* PWA Install Button (Right of Logo, Auto-Hides when already installed) */}
-            {!isInstalled && (
+            {/* PWA Install Button (Right of Logo, Identical to Food Junction) */}
+            {deferredPrompt && (
               <button
                 type="button"
                 onClick={handleInstallClick}
