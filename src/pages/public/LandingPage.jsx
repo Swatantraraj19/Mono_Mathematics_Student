@@ -56,16 +56,12 @@ export const LandingPage = () => {
   }, []);
 
   const handleInstallClick = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        setIsInstalled(true);
-        setDeferredPrompt(null);
-      }
-    } else {
-      // Direct instruction fallback for iOS Safari or Chrome desktop address-bar install
-      alert('To install Mono Mathematics App:\n\n1. In Chrome / Edge: Click the Install icon in your browser address bar (or Menu ➔ "Install App")\n2. In Safari (iOS): Tap Share (⬆) ➔ "Add to Home Screen"');
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setIsInstalled(true);
+      setDeferredPrompt(null);
     }
   };
 
