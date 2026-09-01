@@ -1,0 +1,305 @@
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import {
+  Radio,
+  ExternalLink,
+  Clock,
+  Calendar,
+  Copy,
+  Check,
+  Sparkles,
+  AlertCircle,
+  Video,
+} from 'lucide-react';
+import toast from 'react-hot-toast';
+import { useAuth } from '../../hooks/useAuth';
+import { fetchStudentLiveClasses } from '../../services/liveClassService';
+import { Button } from '../../components/common/Button';
+import { Badge } from '../../components/common/Badge';
+import { SkeletonLoader } from '../../components/common/SkeletonLoader';
+import { EmptyState } from '../../components/common/EmptyState';
+import { formatDateDisplay, formatTimeDisplay } from '../../utils/dateUtils';
+
+export const LiveClassesPage = () => {
+  const { userProfile, isProfileComplete } = useAuth();
+  const studentClassId = userProfile?.classId;
+  const studentStreamId = userProfile?.streamId;
+
+  const [liveClasses, setLiveClasses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('all'); // 'all' | 'live' | 'upcoming' | 'completed'
+  const [copiedId, setCopiedId] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadLiveClasses = async () => {
+      if (!studentClassId) {
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const list = await fetchStudentLiveClasses(studentClassId, studentStreamId);
+        if (isMounted) setLiveClasses(list);
+      } catch (err) {
+        console.error('Error fetching live classes:', err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    loadLiveClasses();
+
+    // Auto refresh status every 60 seconds for live clock transitions
+    const interval = setInterval(loadLiveClasses, 60000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [studentClassId, studentStreamId]);
+
+  const handleCopyLink = (item) => {
+    if (!item.zoomUrl) return;
+    navigator.clipboard.writeText(item.zoomUrl);
+    setCopiedId(item.id);
+    toast.success('Meeting link copied to clipboard.');
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  // Filter based on active tab
+  const filteredClasses = liveClasses.filter((item) => {
+    if (activeTab === 'all') return true;
+    if (activeTab === 'live') return item.computedStatus === 'live';
+    if (activeTab === 'upcoming') return item.computedStatus === 'upcoming';
+    if (activeTab === 'completed') return item.computedStatus === 'completed';
+    return true;
+  });
+
+  const liveNowCount = liveClasses.filter((c) => c.computedStatus === 'live').length;
+  const upcomingCount = liveClasses.filter((c) => c.computedStatus === 'upcoming').length;
+
+  if (!isProfileComplete) {
+    return (
+      <div className="student-card p-8 text-center space-y-4 max-w-lg mx-auto my-8">
+        <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center mx-auto shadow-xs">
+          <AlertCircle className="w-7 h-7" />
+        </div>
+        <div className="space-y-1">
+          <h2 className="text-base font-bold text-slate-900">
+            Please complete your profile first
+          </h2>
+          <p className="text-xs text-slate-500 max-w-sm mx-auto">
+            Select your academic class from your profile to view your scheduled live classes.
+          </p>
+        </div>
+        <Link to="/profile">
+          <Button variant="primary" size="sm" className="font-bold">
+            Go to Profile
+          </Button>
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6 animate-fadeIn select-none">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+            Live Classes
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+            Join scheduled interactive live sessions for{' '}
+            <span className="font-bold text-slate-800">
+              {userProfile.className} {userProfile.streamName ? `• ${userProfile.streamName}` : ''}
+            </span>
+          </p>
+        </div>
+
+        {liveNowCount > 0 && (
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold animate-pulse">
+            <Radio className="w-4 h-4" />
+            <span>{liveNowCount} Class Live Right Now</span>
+          </div>
+        )}
+      </div>
+
+      {/* Filter Tabs */}
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+        {[
+          { key: 'all', label: 'All Sessions', count: liveClasses.length },
+          { key: 'live', label: 'Live Now', count: liveNowCount },
+          { key: 'upcoming', label: 'Upcoming', count: upcomingCount },
+          { key: 'completed', label: 'Completed' },
+        ].map((tab) => {
+          const isSelected = activeTab === tab.key;
+          return (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold shrink-0 transition-all cursor-pointer min-h-[40px] flex items-center gap-1.5 ${
+                isSelected
+                  ? 'bg-primary-600 text-white shadow-xs'
+                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 hover:text-slate-900'
+              }`}
+            >
+              <span>{tab.label}</span>
+              {typeof tab.count === 'number' && tab.count > 0 && (
+                <span
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                    isSelected ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700'
+                  }`}
+                >
+                  {tab.count}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Live Classes Grid */}
+      {loading ? (
+        <SkeletonLoader variant="grid" rows={2} />
+      ) : filteredClasses.length === 0 ? (
+        <EmptyState
+          icon={Radio}
+          title="No Live Classes Scheduled"
+          description={
+            activeTab === 'live'
+              ? 'There are no active live sessions at this moment.'
+              : 'There are no live classes scheduled for you right now.'
+          }
+        />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {filteredClasses.map((item) => {
+            const isLive = item.computedStatus === 'live';
+            const isUpcoming = item.computedStatus === 'upcoming';
+            const isCompleted = item.computedStatus === 'completed';
+            const isCancelled = item.computedStatus === 'cancelled';
+
+            return (
+              <div
+                key={item.id}
+                className={`student-card p-5 space-y-4 flex flex-col justify-between transition-all ${
+                  isLive
+                    ? 'border-rose-300 bg-gradient-to-br from-rose-50/40 to-white ring-1 ring-rose-200 shadow-md'
+                    : 'bg-white'
+                }`}
+              >
+                <div className="space-y-3">
+                  {/* Top Status & Subject Info */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="space-y-1 min-w-0">
+                      <span className="text-[10px] font-bold text-primary-700 uppercase tracking-wider block truncate">
+                        {item.subjectName || 'Mathematics'}
+                      </span>
+                      <h2 className="text-sm sm:text-base font-bold text-slate-900 line-clamp-2">
+                        {item.title}
+                      </h2>
+                    </div>
+
+                    <Badge variant={item.computedStatus} size="sm" dot>
+                      {item.computedStatus === 'live'
+                        ? 'Live Now'
+                        : item.computedStatus === 'upcoming'
+                        ? 'Upcoming'
+                        : item.computedStatus === 'completed'
+                        ? 'Completed'
+                        : 'Cancelled'}
+                    </Badge>
+                  </div>
+
+                  {/* Date & Time Slot Information */}
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 space-y-1.5 text-xs text-slate-600 font-medium">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <span>{formatDateDisplay(item.date)}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <span className="font-mono">
+                        {formatTimeDisplay(item.startTime)}
+                        {item.endTime ? ` – ${formatTimeDisplay(item.endTime)}` : ''}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Card Action Controls */}
+                <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+                  {item.zoomUrl && (
+                    <button
+                      type="button"
+                      onClick={() => handleCopyLink(item)}
+                      className="p-2 rounded-xl text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer text-xs font-semibold flex items-center gap-1.5"
+                      title="Copy Meeting Link"
+                      aria-label="Copy Meeting Link"
+                    >
+                      {copiedId === item.id ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-600" />
+                          <span className="text-emerald-600 text-[11px]">Copied</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5" />
+                          <span className="text-[11px] hidden sm:inline">Copy Link</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+
+                  <div className="ml-auto">
+                    {isLive ? (
+                      <a
+                        href={item.zoomUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          className="bg-rose-600 hover:bg-rose-700 font-bold shadow-md text-xs"
+                          icon={ExternalLink}
+                          iconPosition="right"
+                        >
+                          Join Class Now
+                        </Button>
+                      </a>
+                    ) : isUpcoming ? (
+                      <a
+                        href={item.zoomUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          className="font-bold text-xs"
+                          icon={ExternalLink}
+                          iconPosition="right"
+                        >
+                          Join Class
+                        </Button>
+                      </a>
+                    ) : (
+                      <span className="text-[11px] font-semibold text-slate-400 py-1.5 px-2">
+                        {isCancelled ? 'Session Cancelled' : 'Session Ended'}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};

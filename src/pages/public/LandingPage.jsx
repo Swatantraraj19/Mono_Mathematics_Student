@@ -1,0 +1,369 @@
+import React, { useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import {
+  GraduationCap,
+  Users,
+  Building2,
+  Phone,
+  ArrowRight,
+  CheckCircle2,
+  BookOpen,
+  UserCheck,
+  Trophy,
+  Rocket,
+  Star,
+  MessageCircle,
+  LogIn,
+} from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
+import logo from '../../assets/logo.png';
+import heroImg from '../../assets/hero-illustration.jpg';
+
+export const LandingPage = () => {
+  const navigate = useNavigate();
+  const { authStatus, isAuthenticated } = useAuth();
+
+  // If already authenticated and active, route directly to Dashboard
+  useEffect(() => {
+    if (isAuthenticated && authStatus === 'active') {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, authStatus, navigate]);
+
+  const handleCall = (phoneNumber) => {
+    window.location.href = `tel:${phoneNumber}`;
+  };
+
+  const handleWhatsApp = () => {
+    window.open('https://wa.me/918969351159?text=Hello%20Mono%20Mathematics%20Classes,%20I%20want%20information%20about%20admissions.', '_blank');
+  };
+
+  return (
+    <div className="min-h-screen w-full bg-[#F8FAFC] text-slate-900 font-sans flex flex-col antialiased selection:bg-indigo-100 selection:text-primary-800">
+      
+      {/* ─────────────────────────────────────────────────────────────
+          1. HEADER (100% Responsive for All Screen Sizes: 320px to 4K)
+      ─────────────────────────────────────────────────────────────── */}
+      <header className="w-full bg-white/95 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-40 shrink-0">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2">
+          
+          {/* Logo & Brand Name */}
+          <Link to="/" className="flex items-center gap-2 sm:gap-3 group min-w-0">
+            <img
+              src={logo}
+              alt="Mono Mathematics Classes"
+              className="w-7 h-7 sm:w-8 sm:h-8 lg:w-9 lg:h-9 object-contain drop-shadow-xs group-hover:scale-105 transition-transform shrink-0"
+            />
+            <span className="text-[13px] sm:text-base lg:text-lg font-bold text-slate-900 tracking-tight leading-tight whitespace-nowrap">
+              <span className="inline sm:hidden">Mono Mathematics</span>
+              <span className="hidden sm:inline">Mono Mathematics Classes</span>
+            </span>
+          </Link>
+
+          {/* Right Header Navigation Buttons */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            {/* Desktop Contact Us CTA */}
+            <button
+              type="button"
+              onClick={() => handleCall('8969351159')}
+              className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 transition-all cursor-pointer shadow-2xs"
+            >
+              <Phone className="w-4 h-4 text-primary-600" />
+              <span>Contact Us</span>
+            </button>
+
+            {/* Login / Register Button */}
+            <Link to="/login">
+              <button
+                type="button"
+                className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold text-white bg-primary-600 hover:bg-primary-700 active:bg-primary-800 transition-all cursor-pointer shadow-sm hover:shadow-md whitespace-nowrap"
+              >
+                <LogIn className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                <span>Login / Register</span>
+              </button>
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      {/* ─────────────────────────────────────────────────────────────
+          2. HERO SECTION (Desktop Preserved + Perfect Mobile PWA Scaling)
+      ─────────────────────────────────────────────────────────────── */}
+      <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-4 sm:pb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
+          
+          {/* Left Hero Content */}
+          <div className="lg:col-span-6 space-y-3 sm:space-y-4 text-left">
+            
+            {/* Welcome Pill Badge */}
+            <div>
+              <div className="inline-flex items-center px-3.5 py-1.5 rounded-full bg-indigo-50 border border-indigo-100/80 text-primary-700 text-xs font-semibold shadow-2xs">
+                <span>Welcome to Mono Mathematics Classes</span>
+              </div>
+            </div>
+
+            {/* Main Headline */}
+            <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-slate-900 tracking-tight leading-[1.14]">
+              Learn Better. <br />
+              <span className="text-primary-600">
+                Grow Smarter.
+              </span>
+            </h1>
+
+            {/* Subtitle Description */}
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-lg font-normal">
+              A dedicated learning platform for students from Class 6 to 12. Quality content, structured courses and concept clarity to help you achieve excellence.
+            </p>
+
+            {/* Feature Checkpoints (2-Col Grid on Desktop & Mobile) */}
+            <div className="grid grid-cols-2 gap-x-4 sm:gap-x-5 gap-y-2 pt-0.5 max-w-md">
+              <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-semibold text-slate-700">
+                <CheckCircle2 className="w-4 h-4 text-primary-600 fill-indigo-50 shrink-0" />
+                <span>Concept Clarity</span>
+              </div>
+              <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-semibold text-slate-700">
+                <CheckCircle2 className="w-4 h-4 text-primary-600 fill-indigo-50 shrink-0" />
+                <span>Expert Guidance</span>
+              </div>
+              <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-semibold text-slate-700">
+                <CheckCircle2 className="w-4 h-4 text-primary-600 fill-indigo-50 shrink-0" />
+                <span>Structured Learning</span>
+              </div>
+              <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-semibold text-slate-700">
+                <CheckCircle2 className="w-4 h-4 text-primary-600 fill-indigo-50 shrink-0" />
+                <span>Better Results</span>
+              </div>
+            </div>
+
+            {/* CTA Buttons (Touch-friendly & side-by-side on mobile) */}
+            <div className="flex items-center gap-2.5 sm:gap-3.5 pt-1 sm:pt-1.5">
+              <Link to="/signup" className="flex-1 sm:flex-none">
+                <button
+                  type="button"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 sm:px-6 py-3 rounded-xl text-xs sm:text-sm font-bold text-white bg-primary-600 hover:bg-primary-700 active:bg-primary-800 shadow-md hover:shadow-lg transition-all cursor-pointer whitespace-nowrap"
+                >
+                  <Rocket className="w-4 h-4 shrink-0" />
+                  <span>Get Started</span>
+                  <ArrowRight className="w-4 h-4 shrink-0" />
+                </button>
+              </Link>
+
+              <button
+                type="button"
+                onClick={() => handleCall('8969351159')}
+                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 sm:px-6 py-3 rounded-xl text-xs sm:text-sm font-bold text-slate-800 bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 shadow-xs transition-all cursor-pointer whitespace-nowrap shrink-0"
+              >
+                <Phone className="w-4 h-4 text-primary-600 shrink-0" />
+                <span>Call Us</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Right Hero Card Graphic */}
+          <div className="lg:col-span-6 relative flex justify-center items-center pt-1 sm:pt-0">
+            <div className="relative w-full max-w-sm sm:max-w-md lg:max-w-[480px] rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border border-slate-200/80 bg-white p-1 sm:p-1.5">
+              <img
+                src={heroImg}
+                alt="Mono Mathematics Learning Experience"
+                className="w-full h-auto max-h-[210px] sm:max-h-[255px] object-cover rounded-xl sm:rounded-2xl"
+                loading="eager"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─────────────────────────────────────────────────────────────
+          3. ABOUT & ACADEMIC INFORMATION CARDS SECTION
+      ─────────────────────────────────────────────────────────────── */}
+      <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-1 pb-5 sm:pb-6">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-3.5 sm:gap-4">
+          
+          {/* Card 1: About Mono Mathematics Classes */}
+          <div className="md:col-span-5 bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs flex flex-col justify-between space-y-2">
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2.5 sm:gap-3">
+                <div className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-indigo-50 text-primary-600 border border-indigo-100 shrink-0">
+                  <BookOpen className="w-4 h-4 sm:w-5 sm:h-5" />
+                </div>
+                <h2 className="text-sm sm:text-base font-bold text-slate-900">
+                  About Mono Mathematics Classes
+                </h2>
+              </div>
+              <p className="text-xs sm:text-[13px] text-slate-600 leading-relaxed font-normal">
+                We are committed to building strong mathematical foundations for school students with a focus on understanding, practice and performance.
+              </p>
+            </div>
+          </div>
+
+          {/* Right 3 Stat Cards */}
+          <div className="md:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-3.5 lg:gap-4">
+            
+            {/* Card 2: Classes */}
+            <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 shadow-xs flex sm:flex-col items-center sm:items-start justify-between sm:justify-between gap-3 sm:gap-0 sm:space-y-1.5">
+              <div className="w-9 h-9 rounded-xl sm:rounded-2xl bg-indigo-50 text-primary-600 border border-indigo-100 flex items-center justify-center shrink-0">
+                <GraduationCap className="w-4 h-4" />
+              </div>
+              <div className="space-y-0.5 flex-1 sm:flex-none">
+                <span className="text-[10px] font-bold text-primary-700 uppercase tracking-wider block">
+                  Classes
+                </span>
+                <h3 className="text-sm sm:text-base font-extrabold text-slate-900">
+                  6th to 12th
+                </h3>
+                <p className="text-[11px] text-slate-500">
+                  Comprehensive courses for all classes
+                </p>
+              </div>
+            </div>
+
+            {/* Card 3: Streams */}
+            <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 shadow-xs flex sm:flex-col items-center sm:items-start justify-between sm:justify-between gap-3 sm:gap-0 sm:space-y-1.5">
+              <div className="w-9 h-9 rounded-xl sm:rounded-2xl bg-purple-50 text-purple-600 border border-purple-100 flex items-center justify-center shrink-0">
+                <Users className="w-4 h-4" />
+              </div>
+              <div className="space-y-0.5 flex-1 sm:flex-none">
+                <span className="text-[10px] font-bold text-purple-700 uppercase tracking-wider block">
+                  Streams
+                </span>
+                <h3 className="text-sm sm:text-base font-extrabold text-slate-900 leading-snug">
+                  Science, Arts & Commerce
+                </h3>
+                <p className="text-[11px] text-slate-500">
+                  All major streams covered
+                </p>
+              </div>
+            </div>
+
+            {/* Card 4: Branches */}
+            <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 shadow-xs flex sm:flex-col items-center sm:items-start justify-between sm:justify-between gap-3 sm:gap-0 sm:space-y-1.5">
+              <div className="w-9 h-9 rounded-xl sm:rounded-2xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0">
+                <Building2 className="w-4 h-4" />
+              </div>
+              <div className="space-y-0.5 flex-1 sm:flex-none">
+                <span className="text-[10px] font-bold text-blue-700 uppercase tracking-wider block">
+                  Branches
+                </span>
+                <h3 className="text-sm sm:text-base font-extrabold text-slate-900 leading-snug">
+                  Dhanuki, Madhopur, Ganjpar
+                </h3>
+                <p className="text-[11px] text-slate-500 font-medium">
+                  3 Active Branches
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─────────────────────────────────────────────────────────────
+          4. PURPLE JOURNEY CALLOUT BANNER
+      ─────────────────────────────────────────────────────────────── */}
+      <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+        <div className="rounded-2xl sm:rounded-3xl bg-gradient-to-r from-[#2F1FAD] via-[#3C2BD8] to-[#4F46E5] p-5 sm:p-7 lg:p-8 text-white shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6 relative overflow-hidden">
+          
+          {/* Subtle background circles */}
+          <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+
+          {/* Left: Star Icon + Headline + Subtext */}
+          <div className="flex items-start sm:items-center gap-3.5 sm:gap-4 relative z-10">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center shrink-0">
+              <Star className="w-5 h-5 sm:w-6 sm:h-6 text-amber-300 fill-amber-300" />
+            </div>
+
+            <div className="space-y-1">
+              <h2 className="text-base sm:text-xl font-extrabold tracking-tight text-white">
+                Your learning journey starts here.
+              </h2>
+              <p className="text-xs sm:text-sm text-indigo-100/90 max-w-xl font-normal leading-relaxed">
+                Login or register now to access your classes, subjects, chapters, live classes and recorded lectures.
+              </p>
+            </div>
+          </div>
+
+          {/* Right: Login / Register Button */}
+          <div className="relative z-10 w-full sm:w-auto shrink-0 pt-1 sm:pt-0">
+            <Link to="/login" className="w-full sm:w-auto block">
+              <button
+                type="button"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-sm font-bold text-primary-700 bg-white hover:bg-slate-50 active:bg-slate-100 shadow-md hover:shadow-lg transition-all cursor-pointer whitespace-nowrap"
+              >
+                <span>Login / Register</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ─────────────────────────────────────────────────────────────
+          5. CONTACT & NEED HELP BAR
+      ─────────────────────────────────────────────────────────────── */}
+      <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+        <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-5 lg:p-6 shadow-xs flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+          
+          {/* Left: Need help? */}
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-indigo-50 text-primary-600 flex items-center justify-center shrink-0 border border-indigo-100/70">
+              <Phone className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="text-sm font-bold text-slate-900 block">
+                Need help?
+              </span>
+              <span className="text-xs text-slate-500">
+                We are just a call away.
+              </span>
+            </div>
+          </div>
+
+          {/* Middle: Phone numbers */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-6">
+            <button
+              type="button"
+              onClick={() => handleCall('8969351159')}
+              className="flex items-center gap-2.5 text-sm font-mono font-bold text-slate-800 hover:text-primary-600 transition-colors cursor-pointer"
+            >
+              <div className="w-8 h-8 rounded-xl bg-indigo-50 text-primary-600 flex items-center justify-center">
+                <Phone className="w-4 h-4" />
+              </div>
+              <span>8969351159</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleCall('9060584382')}
+              className="flex items-center gap-2.5 text-sm font-mono font-bold text-slate-800 hover:text-primary-600 transition-colors cursor-pointer"
+            >
+              <div className="w-8 h-8 rounded-xl bg-indigo-50 text-primary-600 flex items-center justify-center">
+                <Phone className="w-4 h-4" />
+              </div>
+              <span>9060584382</span>
+            </button>
+          </div>
+
+          {/* Right: WhatsApp / Call Now Action */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleWhatsApp}
+              className="w-full lg:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-emerald-700 bg-white hover:bg-emerald-50 border border-emerald-300 shadow-2xs transition-all cursor-pointer whitespace-nowrap"
+            >
+              <MessageCircle className="w-4 h-4 text-emerald-600 fill-emerald-100" />
+              <span>Call Now</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ─────────────────────────────────────────────────────────────
+          6. FOOTER
+      ─────────────────────────────────────────────────────────────── */}
+      <footer className="w-full bg-[#0B132B] text-slate-400 py-4 sm:py-6 text-center text-xs mt-auto">
+        <div className="max-w-7xl mx-auto px-4">
+          <p>© {new Date().getFullYear()} Mono Mathematics Classes. All rights reserved.</p>
+        </div>
+      </footer>
+    </div>
+  );
+};
