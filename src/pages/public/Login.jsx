@@ -108,10 +108,18 @@ export const Login = () => {
 
     if (!validateForm()) return;
 
-    setIsSubmitting(true);
     try {
-      await login(email.trim().toLowerCase(), password);
+      const result = await login(email.trim().toLowerCase(), password);
+      if (result.profile?.status === 'inactive') {
+        navigate('/account-inactive', { replace: true });
+        return;
+      }
+      if (result.profile?.status === 'pending') {
+        navigate('/verification-pending', { replace: true });
+        return;
+      }
       toast.success('Welcome back! Signed in successfully.');
+      navigate('/dashboard', { replace: true });
     } catch (err) {
       let message = 'Failed to sign in. Please check your credentials.';
       if (

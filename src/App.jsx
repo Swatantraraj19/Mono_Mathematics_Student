@@ -21,11 +21,86 @@ const ProfilePage = lazy(() => import('./pages/student/ProfilePage').then(m => (
 const LecturesPage = lazy(() => import('./pages/student/LecturesPage').then(m => ({ default: m.LecturesPage })));
 const LiveClassesPage = lazy(() => import('./pages/student/LiveClassesPage').then(m => ({ default: m.LiveClassesPage })));
 
+import { useAuth } from './hooks/useAuth';
+
 const PageFallback = () => (
   <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
     <Loader2 className="w-8 h-8 text-primary-600 animate-spin" />
   </div>
 );
+
+const AppRoutes = () => {
+  const { authStatus } = useAuth();
+
+  // Root Hydration Gate:
+  // When the app first boots, Firebase restores the session from local IndexedDB (50-100ms).
+  // Rendering PageFallback prevents flashing the Landing Page for already logged-in students!
+  if (authStatus === 'checking') {
+    return <PageFallback />;
+  }
+
+  return (
+    <Routes>
+      {/* Public Routes with Declarative Status Resolution (Zero Flicker) */}
+      <Route
+        path="/"
+        element={
+          authStatus === 'active' ? (
+            <Navigate to="/dashboard" replace />
+          ) : authStatus === 'pending' ? (
+            <Navigate to="/verification-pending" replace />
+          ) : authStatus === 'inactive' ? (
+            <Navigate to="/account-inactive" replace />
+          ) : (
+            <LandingPage />
+          )
+        }
+      />
+      <Route
+        path="/login"
+        element={
+          authStatus === 'active' ? (
+            <Navigate to="/dashboard" replace />
+          ) : authStatus === 'pending' ? (
+            <Navigate to="/verification-pending" replace />
+          ) : authStatus === 'inactive' ? (
+            <Navigate to="/account-inactive" replace />
+          ) : (
+            <Login />
+          )
+        }
+      />
+      <Route
+        path="/signup"
+        element={
+          authStatus === 'active' ? (
+            <Navigate to="/dashboard" replace />
+          ) : authStatus === 'pending' ? (
+            <Navigate to="/verification-pending" replace />
+          ) : authStatus === 'inactive' ? (
+            <Navigate to="/account-inactive" replace />
+          ) : (
+            <Signup />
+          )
+        }
+      />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/verification-pending" element={<VerificationPending />} />
+      <Route path="/account-inactive" element={<AccountInactive />} />
+
+      {/* Authenticated Student Portal Routes */}
+      <Route element={<ProtectedRoute><StudentLayout /></ProtectedRoute>}>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/lectures" element={<LecturesPage />} />
+        <Route path="/live-classes" element={<LiveClassesPage />} />
+      </Route>
+
+      {/* Catch-all redirect */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+};
 
 function App() {
   return (
@@ -34,26 +109,7 @@ function App() {
         <BrowserRouter>
           <AppToaster />
           <Suspense fallback={<PageFallback />}>
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/verification-pending" element={<VerificationPending />} />
-              <Route path="/account-inactive" element={<AccountInactive />} />
-
-              {/* Authenticated Student Portal Routes */}
-              <Route element={<ProtectedRoute><StudentLayout /></ProtectedRoute>}>
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/profile" element={<ProfilePage />} />
-                <Route path="/lectures" element={<LecturesPage />} />
-                <Route path="/live-classes" element={<LiveClassesPage />} />
-              </Route>
-
-              {/* Catch-all redirect */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
+            <AppRoutes />
           </Suspense>
         </BrowserRouter>
       </AuthProvider>

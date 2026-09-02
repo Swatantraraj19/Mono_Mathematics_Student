@@ -87,6 +87,7 @@ export const AuthProvider = ({ children }) => {
       const result = await authService.login(email, password);
       setUser(result.user);
       setUserProfile(result.profile);
+      setAuthStatus(result.profile?.status || 'active');
       return result;
     } catch (err) {
       setAuthStatus('unauthenticated');
@@ -100,6 +101,7 @@ export const AuthProvider = ({ children }) => {
       const result = await authService.signup(data);
       setUser(result.user);
       setUserProfile(result.profile);
+      setAuthStatus(result.profile?.status || 'active');
       return result;
     } catch (err) {
       setAuthStatus('unauthenticated');
@@ -113,6 +115,7 @@ export const AuthProvider = ({ children }) => {
       const result = await authService.loginWithGoogle();
       setUser(result.user);
       setUserProfile(result.profile);
+      setAuthStatus(result.profile?.status || 'active');
       return result;
     } catch (err) {
       setAuthStatus('unauthenticated');
