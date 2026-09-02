@@ -2,7 +2,7 @@ import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { Menu } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { navigationItems } from './Sidebar';
+import { navigationItems } from '../../constants/navigation';
 import logo from '../../assets/logo.png';
 
 export const Header = ({ onMenuClick }) => {

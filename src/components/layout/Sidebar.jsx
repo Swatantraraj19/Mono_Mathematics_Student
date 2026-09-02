@@ -12,12 +12,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { cn } from '../../utils/cn';
 import logo from '../../assets/logo.png';
 
-export const navigationItems = [
-  { name: 'Home', path: '/dashboard', icon: Home },
-  { name: 'Profile', path: '/profile', icon: User },
-  { name: 'Lectures', path: '/lectures', icon: Video },
-  { name: 'Live Classes', path: '/live-classes', icon: Radio },
-];
+import { navigationItems } from '../../constants/navigation';
 
 export const Sidebar = ({ className = '', onItemClick }) => {
   const { userProfile, logout } = useAuth();

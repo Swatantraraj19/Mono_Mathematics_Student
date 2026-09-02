@@ -1,10 +1,33 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ShieldAlert, Phone, LogOut } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { Button } from '../../components/common/Button';
 
 export const AccountInactive = () => {
-  const { logout } = useAuth();
+  const navigate = useNavigate();
+  const { logout, authStatus, isAuthenticated } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  useEffect(() => {
+    if (authStatus === 'unauthenticated') {
+      navigate('/login', { replace: true });
+    } else if (isAuthenticated && authStatus === 'active') {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [authStatus, isAuthenticated, navigate]);
+
+  const handleSignOut = async () => {
+    try {
+      setIsLoggingOut(true);
+      await logout();
+      navigate('/login', { replace: true });
+    } catch (err) {
+      navigate('/login', { replace: true });
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   return (
     <div className="min-h-[100dvh] w-full bg-slate-50 flex flex-col justify-center items-center px-4 py-6 sm:py-10 antialiased selection:bg-indigo-100 selection:text-primary-800">
@@ -38,9 +61,11 @@ export const AccountInactive = () => {
           <div className="pt-1">
             <Button
               variant="secondary"
-              className="w-full text-xs font-bold py-2.5 rounded-xl"
+              className="w-full text-xs font-bold py-2.5 rounded-xl cursor-pointer"
               icon={LogOut}
-              onClick={logout}
+              isLoading={isLoggingOut}
+              disabled={isLoggingOut}
+              onClick={handleSignOut}
             >
               Sign Out
             </Button>
