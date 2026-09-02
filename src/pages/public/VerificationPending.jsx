@@ -13,7 +13,7 @@ export const VerificationPending = () => {
     if (isAuthenticated && authStatus === 'active') {
       navigate('/dashboard', { replace: true });
     } else if (authStatus === 'unauthenticated') {
-      navigate('/login', { replace: true });
+      navigate('/', { replace: true });
     }
   }, [isAuthenticated, authStatus, navigate]);
 

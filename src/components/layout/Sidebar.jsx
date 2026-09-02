@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import {
   Home,
   User,
@@ -11,11 +11,17 @@ import {
 import { useAuth } from '../../hooks/useAuth';
 import { cn } from '../../utils/cn';
 import logo from '../../assets/logo.png';
-
 import { navigationItems } from '../../constants/navigation';
 
 export const Sidebar = ({ className = '', onItemClick }) => {
+  const navigate = useNavigate();
   const { userProfile, logout } = useAuth();
+
+  const handleLogout = async () => {
+    if (onItemClick) onItemClick();
+    await logout();
+    navigate('/', { replace: true });
+  };
 
   return (
     <aside className={cn('w-64 bg-white border-r border-slate-200 flex flex-col h-full select-none shrink-0 overflow-hidden', className)}>
@@ -94,7 +100,7 @@ export const Sidebar = ({ className = '', onItemClick }) => {
 
           <button
             type="button"
-            onClick={logout}
+            onClick={handleLogout}
             className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-status-error hover:bg-red-50 border border-slate-200 hover:border-red-200 transition-colors shrink-0 cursor-pointer shadow-xs active:bg-red-100"
             title="Logout"
             aria-label="Logout"

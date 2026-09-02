@@ -11,7 +11,7 @@ export const AccountInactive = () => {
 
   useEffect(() => {
     if (authStatus === 'unauthenticated') {
-      navigate('/login', { replace: true });
+      navigate('/', { replace: true });
     } else if (isAuthenticated && authStatus === 'active') {
       navigate('/dashboard', { replace: true });
     }
@@ -21,9 +21,9 @@ export const AccountInactive = () => {
     try {
       setIsLoggingOut(true);
       await logout();
-      navigate('/login', { replace: true });
+      navigate('/', { replace: true });
     } catch (err) {
-      navigate('/login', { replace: true });
+      navigate('/', { replace: true });
     } finally {
       setIsLoggingOut(false);
     }

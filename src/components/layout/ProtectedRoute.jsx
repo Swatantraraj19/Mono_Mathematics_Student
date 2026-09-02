@@ -23,7 +23,7 @@ export const ProtectedRoute = ({ children }) => {
   }
 
   if (authStatus === 'unauthenticated') {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to="/" replace />;
   }
 
   if (authStatus === 'pending') {
