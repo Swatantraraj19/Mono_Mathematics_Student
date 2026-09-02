@@ -107,6 +107,19 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const loginWithGoogle = async () => {
+    setAuthStatus('checking');
+    try {
+      const result = await authService.loginWithGoogle();
+      setUser(result.user);
+      setUserProfile(result.profile);
+      return result;
+    } catch (err) {
+      setAuthStatus('unauthenticated');
+      throw err;
+    }
+  };
+
   const updateProfile = async (academicData) => {
     if (!user) throw new Error('Not authenticated');
     await authService.updateProfile(user.uid, academicData);
@@ -137,6 +150,7 @@ export const AuthProvider = ({ children }) => {
     errorMessage,
     login,
     signup,
+    loginWithGoogle,
     logout,
     updateProfile,
     isProfileComplete,

@@ -101,6 +101,10 @@ export const ProfilePage = () => {
 
     if (!name.trim()) {
       newErrors.name = 'Full Name is required.';
+    } else if (name.trim().length < 2) {
+      newErrors.name = 'Name must be at least 2 characters.';
+    } else if (!/^[a-zA-Z\s.']{2,50}$/.test(name.trim())) {
+      newErrors.name = 'Please enter a valid name (letters only).';
     }
 
     if (!selectedClassId) {

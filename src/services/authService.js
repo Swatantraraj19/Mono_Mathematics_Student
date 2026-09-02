@@ -2,6 +2,8 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
+  signInWithPopup,
+  GoogleAuthProvider,
   signOut,
 } from 'firebase/auth';
 import {
@@ -72,6 +74,62 @@ export const authService = {
       };
     } catch (err) {
       if (err.message.includes('Access denied') || err.message.includes('No student record')) {
+        await signOut(auth);
+      }
+      throw err;
+    }
+  },
+
+  /**
+   * Student Login / Signup with Google OAuth Popup.
+   */
+  async loginWithGoogle() {
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+    const userCredential = await signInWithPopup(auth, provider);
+    const user = userCredential.user;
+    const uid = user.uid;
+
+    try {
+      let profile = await this.fetchStudentProfile(uid);
+
+      // If first-time Google signin, initialize student record in Firestore
+      if (!profile) {
+        const accessMode = await this.fetchAccessMode(INSTITUTE_ID);
+        const initialStatus = accessMode === 'approval' ? 'pending' : 'active';
+
+        const studentData = {
+          uid,
+          name: user.displayName || 'Student',
+          email: user.email ? user.email.toLowerCase() : '',
+          role: 'student',
+          status: initialStatus,
+          instituteId: INSTITUTE_ID,
+          classId: null,
+          className: null,
+          streamId: null,
+          streamName: null,
+          photoURL: user.photoURL || null,
+          registeredAt: serverTimestamp(),
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        };
+
+        const userDocRef = doc(db, USERS_COLLECTION, uid);
+        await setDoc(userDocRef, studentData);
+        profile = { id: uid, ...studentData };
+      }
+
+      if (profile.role !== 'student') {
+        throw new Error('Access denied: This portal is exclusively for students.');
+      }
+
+      return {
+        user,
+        profile,
+      };
+    } catch (err) {
+      if (err.message.includes('Access denied')) {
         await signOut(auth);
       }
       throw err;
