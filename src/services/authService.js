@@ -58,10 +58,33 @@ export const authService = {
     const uid = userCredential.user.uid;
 
     try {
-      const profile = await this.fetchStudentProfile(uid);
+      let profile = await this.fetchStudentProfile(uid);
 
+      // Auto-heal / self-recovery if profile was deleted from Firestore but Auth account exists
       if (!profile) {
-        throw new Error('No student record found. Please register for an account.');
+        const accessMode = await this.fetchAccessMode(INSTITUTE_ID);
+        const initialStatus = accessMode === 'approval' ? 'pending' : 'active';
+
+        const studentData = {
+          uid,
+          name: userCredential.user.displayName || email.split('@')[0],
+          email: email.trim().toLowerCase(),
+          role: 'student',
+          status: initialStatus,
+          instituteId: INSTITUTE_ID,
+          classId: null,
+          className: null,
+          streamId: null,
+          streamName: null,
+          photoURL: userCredential.user.photoURL || null,
+          registeredAt: serverTimestamp(),
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        };
+
+        const userDocRef = doc(db, USERS_COLLECTION, uid);
+        await setDoc(userDocRef, studentData);
+        profile = { id: uid, ...studentData };
       }
 
       if (profile.role !== 'student') {
@@ -73,7 +96,7 @@ export const authService = {
         profile,
       };
     } catch (err) {
-      if (err.message.includes('Access denied') || err.message.includes('No student record')) {
+      if (err.message.includes('Access denied')) {
         await signOut(auth);
       }
       throw err;
