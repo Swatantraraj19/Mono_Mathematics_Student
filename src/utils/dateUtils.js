@@ -29,6 +29,10 @@ export const computeLiveClassStatus = (liveClass) => {
     return 'cancelled';
   }
 
+  if (liveClass.manualStatus === 'completed' || liveClass.status === 'completed') {
+    return 'completed';
+  }
+
   if (!liveClass.date || !liveClass.startTime) {
     return liveClass.status || 'upcoming';
   }

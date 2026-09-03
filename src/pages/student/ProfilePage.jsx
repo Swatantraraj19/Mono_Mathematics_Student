@@ -101,8 +101,8 @@ export const ProfilePage = () => {
 
     if (!name.trim()) {
       newErrors.name = 'Full Name is required.';
-    } else if (name.trim().length < 2) {
-      newErrors.name = 'Name must be at least 2 characters.';
+    } else if (name.trim().length < 3) {
+      newErrors.name = 'Name must be at least 3 characters.';
     } else if (!/^[a-zA-Z\s.']{2,50}$/.test(name.trim())) {
       newErrors.name = 'Please enter a valid name (letters only).';
     }
@@ -158,14 +158,14 @@ export const ProfilePage = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 animate-fadeIn select-none">
+    <div className="max-w-3xl mx-auto space-y-6 lg:space-y-3 animate-fadeIn select-none">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+          <h1 className="text-xl sm:text-2xl lg:text-xl font-extrabold text-slate-900 tracking-tight">
             My Profile
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+          <p className="text-xs sm:text-sm lg:text-xs text-slate-500 mt-0.5">
             Manage your account and academic information.
           </p>
         </div>
@@ -184,13 +184,13 @@ export const ProfilePage = () => {
       </div>
 
       {/* Profile Overview Card */}
-      <div className="student-card flex items-center justify-between gap-4 p-5 sm:p-6">
+      <div className="student-card flex items-center justify-between gap-4 p-5 sm:p-6 lg:py-3 lg:px-5">
         <div className="flex items-center gap-4 min-w-0">
-          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-primary-600 text-white font-extrabold text-xl sm:text-2xl flex items-center justify-center shadow-md shrink-0">
+          <div className="w-14 h-14 sm:w-16 sm:h-16 lg:w-11 lg:h-11 rounded-2xl lg:rounded-xl bg-primary-600 text-white font-extrabold text-xl sm:text-2xl lg:text-base flex items-center justify-center shadow-md shrink-0">
             {userProfile?.name?.charAt(0).toUpperCase() || 'S'}
           </div>
           <div className="space-y-1 min-w-0">
-            <h2 className="text-base sm:text-lg font-bold text-slate-900 truncate">
+            <h2 className="text-base sm:text-lg lg:text-base font-bold text-slate-900 truncate">
               {userProfile?.name || 'Student'}
             </h2>
             <div className="flex flex-wrap items-center gap-2">
@@ -206,16 +206,16 @@ export const ProfilePage = () => {
       </div>
 
       {/* Main Profile Form Card */}
-      <div className="student-card p-6 sm:p-8">
-        <form onSubmit={handleSave} className="space-y-6">
+      <div className="student-card p-6 sm:p-8 lg:p-5 lg:px-6">
+        <form onSubmit={handleSave} className="space-y-6 lg:space-y-3.5">
           {/* Section 1: Personal Information */}
-          <div className="space-y-4">
+          <div className="space-y-4 lg:space-y-2.5">
             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
               <User className="w-3.5 h-3.5" />
               Personal Information
             </h3>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-3.5">
               <div>
                 <Input
                   label="Full Name"
@@ -246,13 +246,13 @@ export const ProfilePage = () => {
           </div>
 
           {/* Section 2: Academic Information */}
-          <div className="space-y-4 pt-4 border-t border-slate-100">
+          <div className="space-y-4 lg:space-y-2.5 pt-4 lg:pt-3 border-t border-slate-100">
             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
               <GraduationCap className="w-3.5 h-3.5" />
               Academic Information
             </h3>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-3.5">
               <div>
                 <Select
                   label="Academic Class"
@@ -301,7 +301,7 @@ export const ProfilePage = () => {
 
           {/* Form Actions (Only in Edit Mode) */}
           {isEditing && (
-            <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100 animate-fadeIn">
+            <div className="flex items-center justify-end gap-2.5 pt-4 lg:pt-3 border-t border-slate-100 animate-fadeIn">
               <Button
                 type="button"
                 variant="secondary"

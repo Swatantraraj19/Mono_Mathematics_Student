@@ -27,7 +27,7 @@ export const LiveClassesPage = () => {
 
   const [liveClasses, setLiveClasses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('all'); // 'all' | 'live' | 'upcoming' | 'completed'
+  const [activeTab, setActiveTab] = useState('upcoming'); // 'upcoming' | 'live' | 'completed' | 'all'
   const [copiedId, setCopiedId] = useState(null);
 
   useEffect(() => {
@@ -42,7 +42,14 @@ export const LiveClassesPage = () => {
       setLoading(true);
       try {
         const list = await fetchStudentLiveClasses(studentClassId, studentStreamId);
-        if (isMounted) setLiveClasses(list);
+        if (isMounted) {
+          setLiveClasses(list);
+          // If any session is currently live, automatically highlight the Live tab
+          const hasLiveNow = list.some((c) => c.computedStatus === 'live');
+          if (hasLiveNow) {
+            setActiveTab('live');
+          }
+        }
       } catch (err) {
         console.error('Error fetching live classes:', err);
       } finally {
@@ -131,10 +138,10 @@ export const LiveClassesPage = () => {
       {/* Filter Tabs */}
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
         {[
-          { key: 'all', label: 'All Sessions', count: liveClasses.length },
-          { key: 'live', label: 'Live Now', count: liveNowCount },
           { key: 'upcoming', label: 'Upcoming', count: upcomingCount },
-          { key: 'completed', label: 'Completed' },
+          { key: 'live', label: 'Live Now', count: liveNowCount, hasPulse: liveNowCount > 0 },
+          { key: 'completed', label: 'Completed', count: liveClasses.filter((c) => c.computedStatus === 'completed').length },
+          { key: 'all', label: 'All Sessions', count: liveClasses.length },
         ].map((tab) => {
           const isSelected = activeTab === tab.key;
           return (
@@ -147,6 +154,9 @@ export const LiveClassesPage = () => {
                   : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 hover:text-slate-900'
               }`}
             >
+              {tab.hasPulse && (
+                <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse shrink-0" />
+              )}
               <span>{tab.label}</span>
               {typeof tab.count === 'number' && tab.count > 0 && (
                 <span
@@ -168,10 +178,22 @@ export const LiveClassesPage = () => {
       ) : filteredClasses.length === 0 ? (
         <EmptyState
           icon={Radio}
-          title="No Live Classes Scheduled"
+          title={
+            activeTab === 'live'
+              ? 'No Live Sessions Right Now'
+              : activeTab === 'upcoming'
+              ? 'No Upcoming Classes Scheduled'
+              : activeTab === 'completed'
+              ? 'No Past Completed Sessions'
+              : 'No Live Classes Found'
+          }
           description={
             activeTab === 'live'
-              ? 'There are no active live sessions at this moment.'
+              ? 'There are no active live classes broadcasting at this moment. Check the Upcoming tab for scheduled sessions.'
+              : activeTab === 'upcoming'
+              ? 'You have no pending live classes scheduled at this moment. Check back later!'
+              : activeTab === 'completed'
+              ? 'You have not completed any live class sessions yet.'
               : 'There are no live classes scheduled for you right now.'
           }
         />

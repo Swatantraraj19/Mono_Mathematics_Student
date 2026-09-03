@@ -3,29 +3,23 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   GraduationCap,
   BookOpen,
-  Radio,
   ArrowRight,
   Sparkles,
   AlertCircle,
-  ExternalLink,
   Layers,
-  Clock,
   Video,
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { fetchStudentSubjects } from '../../services/lectureService';
-import { fetchStudentLiveClasses } from '../../services/liveClassService';
 import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
 import { SkeletonLoader } from '../../components/common/SkeletonLoader';
-import { formatDateDisplay, formatTimeDisplay } from '../../utils/dateUtils';
 
 export const Dashboard = () => {
   const navigate = useNavigate();
   const { userProfile, isProfileComplete } = useAuth();
 
   const [subjects, setSubjects] = useState([]);
-  const [liveSessions, setLiveSessions] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const studentClassId = userProfile?.classId;
@@ -42,14 +36,9 @@ export const Dashboard = () => {
 
       setLoading(true);
       try {
-        const [subjectsData, liveData] = await Promise.all([
-          fetchStudentSubjects(studentClassId, studentStreamId),
-          fetchStudentLiveClasses(studentClassId, studentStreamId),
-        ]);
-
+        const subjectsData = await fetchStudentSubjects(studentClassId, studentStreamId);
         if (isMounted) {
           setSubjects(subjectsData);
-          setLiveSessions(liveData);
         }
       } catch (err) {
         console.error('Error loading dashboard data:', err);
@@ -64,11 +53,6 @@ export const Dashboard = () => {
       isMounted = false;
     };
   }, [studentClassId, studentStreamId]);
-
-  // Find nearest upcoming or currently live class
-  const activeOrUpcomingSession = liveSessions.find(
-    (s) => s.computedStatus === 'live' || s.computedStatus === 'upcoming'
-  );
 
   return (
     <div className="space-y-6 animate-fadeIn select-none">
@@ -89,7 +73,7 @@ export const Dashboard = () => {
               {userProfile?.name || 'Student'}
             </h1>
             <p className="text-xs sm:text-sm text-indigo-100/90 leading-relaxed max-w-xl">
-              Access your structured syllabus, recorded video lectures, and live interactive classes.
+              Access your structured syllabus and recorded video lectures.
             </p>
           </div>
         </div>
@@ -149,59 +133,7 @@ export const Dashboard = () => {
         </div>
       )}
 
-      {/* 4. Live Session Highlight (If Live or Upcoming session exists) */}
-      {activeOrUpcomingSession && (
-        <div className="student-card border-rose-200 bg-gradient-to-br from-rose-50/50 via-white to-orange-50/30 p-5 space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Badge variant={activeOrUpcomingSession.computedStatus} dot>
-                {activeOrUpcomingSession.computedStatus === 'live' ? 'Live Now' : 'Upcoming Session'}
-              </Badge>
-              <span className="text-xs font-semibold text-slate-600">
-                {activeOrUpcomingSession.subjectName}
-              </span>
-            </div>
-            <span className="text-xs font-mono font-medium text-slate-500 flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5" />
-              {formatDateDisplay(activeOrUpcomingSession.date)} • {formatTimeDisplay(activeOrUpcomingSession.startTime)}
-            </span>
-          </div>
-
-          <div>
-            <h2 className="text-sm sm:text-base font-bold text-slate-900">
-              {activeOrUpcomingSession.title}
-            </h2>
-          </div>
-
-          <div className="flex justify-end pt-1">
-            {activeOrUpcomingSession.computedStatus === 'live' && activeOrUpcomingSession.zoomUrl ? (
-              <a
-                href={activeOrUpcomingSession.zoomUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  className="bg-rose-600 hover:bg-rose-700 shadow-md font-bold text-xs"
-                  icon={ExternalLink}
-                  iconPosition="right"
-                >
-                  Join Class Now
-                </Button>
-              </a>
-            ) : (
-              <Link to="/live-classes">
-                <Button variant="secondary" size="sm" className="text-xs font-semibold">
-                  View Live Schedule
-                </Button>
-              </Link>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* 5. Enrolled Subjects Grid */}
+      {/* Enrolled Subjects Grid */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">

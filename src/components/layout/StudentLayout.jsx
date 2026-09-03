@@ -30,8 +30,8 @@ export const StudentLayout = () => {
         <Header onMenuClick={() => setMobileDrawerOpen(true)} />
 
         {/* Independent Scrolling Content Viewport */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-          <div className="max-w-6xl w-full mx-auto pb-12">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-5">
+          <div className="max-w-6xl w-full mx-auto pb-12 lg:pb-4">
             <Suspense fallback={<SkeletonLoader variant="dashboard" />}>
               <Outlet />
             </Suspense>
