@@ -233,9 +233,9 @@ export const LecturesPage = () => {
         <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight leading-tight">
           Recorded Lectures
         </h1>
-        <div className="flex items-center gap-1.5 mt-0.5 text-sm text-slate-500">
+        <div className="flex items-center gap-1.5 mt-0.5 text-[13px] text-slate-500">
           <span>Syllabus for</span>
-          <span className="font-bold text-primary-700 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded text-xs">
+          <span className="font-bold text-primary-700 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded text-[11px]">
             {userProfile?.className || 'Class'}
             {userProfile?.streamName ? ` • ${userProfile.streamName}` : ''}
           </span>
@@ -252,10 +252,10 @@ export const LecturesPage = () => {
               placeholder="Search all video lectures across syllabus..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full text-sm py-1.5 sm:py-2 pl-8 pr-8 sm:pr-11 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white"
+              className="w-full text-[13px] py-1.5 sm:py-2 pl-8 pr-8 sm:pr-11 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white"
               aria-label="Search Videos"
             />
-            <Search className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             {searchQuery && (
               <button
                 type="button"
@@ -263,7 +263,7 @@ export const LecturesPage = () => {
                 className="absolute right-0 top-0 bottom-0 w-8 sm:w-10 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer"
                 title="Clear search"
               >
-                <X className="w-4 h-4" />
+                <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </button>
             )}
           </div>
@@ -284,7 +284,7 @@ export const LecturesPage = () => {
             title="Refresh lectures data"
             aria-label="Refresh lectures data"
           >
-            <RefreshCw className="w-4 h-4" />
+            <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </button>
         </div>
 
@@ -292,14 +292,14 @@ export const LecturesPage = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2 pt-1.5 sm:pt-2 border-t border-slate-100">
           {/* Subject Selector */}
           <div>
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-0.5 sm:mb-1">
+            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-0.5 sm:mb-1">
               Subject
             </label>
             <select
               value={selectedSubjectId}
               onChange={(e) => setSelectedSubjectId(e.target.value)}
               disabled={loadingSubjects || subjects.length === 0}
-              className="w-full text-sm py-1.5 sm:py-2 px-2.5 bg-slate-50/70 border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500 font-medium"
+              className="w-full text-[13px] py-1.5 sm:py-2 px-2.5 bg-slate-50/70 border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500 font-medium"
               aria-label="Select Subject"
             >
               {loadingSubjects ? (
@@ -318,14 +318,14 @@ export const LecturesPage = () => {
 
           {/* Chapter Selector */}
           <div>
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-0.5 sm:mb-1">
+            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-0.5 sm:mb-1">
               Chapter
             </label>
             <select
               value={selectedChapterId}
               onChange={(e) => setSelectedChapterId(e.target.value)}
               disabled={loadingChapters || chapters.length === 0}
-              className="w-full text-sm py-1.5 sm:py-2 px-2.5 bg-indigo-50/30 text-indigo-900 border border-indigo-200 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full text-[13px] py-1.5 sm:py-2 px-2.5 bg-indigo-50/30 text-indigo-900 border border-indigo-200 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-primary-500"
               aria-label="Select Chapter"
             >
               {loadingChapters ? (
@@ -345,14 +345,14 @@ export const LecturesPage = () => {
 
         {/* Compact Result Summary Line (Admin exact match) */}
         {!loadingSubjects && (
-          <div className="pt-1.5 sm:pt-2 border-t border-slate-100 flex items-center justify-between text-sm text-slate-600 flex-wrap gap-1">
+          <div className="pt-1.5 sm:pt-2 border-t border-slate-100 flex items-center justify-between text-[13px] text-slate-600 flex-wrap gap-1">
             {searchQuery.trim() ? (
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary-500 shrink-0"></span>
                 <span>
                   Search for "<strong>{searchQuery.trim()}</strong>":
                 </span>
-                <span className="font-semibold text-primary-700 bg-primary-50 px-2 py-0.2 rounded text-xs">
+                <span className="font-semibold text-primary-700 bg-primary-50 px-2 py-0.2 rounded text-[11px]">
                   {searchResults.length} matching lecture{searchResults.length !== 1 ? 's' : ''}
                 </span>
               </span>
@@ -363,19 +363,19 @@ export const LecturesPage = () => {
                   {currentChapterVideos.length} lecture{currentChapterVideos.length !== 1 ? 's' : ''} in this chapter
                 </span>
                 <span className="text-slate-400 hidden sm:inline">•</span>
-                <span className="text-slate-400 hidden sm:inline text-xs">
+                <span className="text-slate-400 hidden sm:inline text-[11px]">
                   Ch #{activeChapterObj.chapterNumber} {activeChapterObj.name}
                 </span>
               </span>
             ) : (
-              <span className="text-slate-400 text-xs">Select a chapter above to view lectures</span>
+              <span className="text-slate-400 text-[12px]">Select a chapter above to view lectures</span>
             )}
 
             {searchQuery.trim() && (
               <button
                 type="button"
                 onClick={() => setSearchQuery('')}
-                className="text-xs font-semibold text-primary-600 hover:text-primary-800 hover:underline cursor-pointer"
+                className="text-[11px] font-semibold text-primary-600 hover:text-primary-800 hover:underline cursor-pointer"
               >
                 Back to chapter view
               </button>
@@ -563,23 +563,23 @@ const renderVideoList = (videos, onPlay) => {
               <div className="min-w-0 flex-1">
                 <h4
                   onClick={() => onPlay(v)}
-                  className="text-sm font-bold text-slate-900 leading-tight truncate cursor-pointer hover:text-primary-600 transition-colors"
+                  className="text-[13px] font-bold text-slate-900 leading-tight truncate cursor-pointer hover:text-primary-600 transition-colors"
                   title={v.title}
                 >
                   {v.title}
                 </h4>
-                <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-0.5">
-                  <span className="font-mono font-bold text-primary-700 bg-indigo-50 px-1.5 py-0.2 rounded text-xs">
+                <div className="flex items-center gap-1.5 text-[11px] text-slate-500 mt-0.5">
+                  <span className="font-mono font-bold text-primary-700 bg-indigo-50 px-1.5 py-0.2 rounded text-[11px]">
                     #{v.orderIndex || 1}
                   </span>
                   <span>•</span>
-                  <span className="text-emerald-600 font-medium text-xs">
+                  <span className="text-emerald-600 font-medium text-[11px]">
                     Active
                   </span>
                   {v.duration && v.duration !== 'N/A' && (
                     <>
                       <span>•</span>
-                      <span className="font-mono text-slate-400 text-xs">{v.duration}</span>
+                      <span className="font-mono text-slate-400 text-[11px]">{v.duration}</span>
                     </>
                   )}
                 </div>
@@ -607,7 +607,7 @@ const renderVideoList = (videos, onPlay) => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <tr className="border-b border-slate-200 bg-slate-50/75 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                 <th className="py-2.5 px-3 w-16">L #</th>
                 <th className="py-2.5 px-3 w-24">Preview</th>
                 <th className="py-2.5 px-3">Lecture Title</th>
@@ -616,7 +616,7 @@ const renderVideoList = (videos, onPlay) => {
                 <th className="py-2.5 px-3 text-right w-24 pr-4">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 text-sm">
+            <tbody className="divide-y divide-slate-100 text-xs">
               {videos.map((v) => {
                 const ytId = v.youtubeVideoId || extractYouTubeVideoId(v.videoUrl);
                 const thumb = v.thumbnailUrl || (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : null);
@@ -624,7 +624,7 @@ const renderVideoList = (videos, onPlay) => {
                 return (
                   <tr key={v.id} className="hover:bg-slate-50/60 transition-colors">
                     <td className="py-2 px-3">
-                      <span className="font-mono text-xs font-bold px-2 py-0.5 bg-indigo-50 text-primary-700 rounded-md">
+                      <span className="font-mono text-[11px] font-bold px-2 py-0.5 bg-indigo-50 text-primary-700 rounded-md">
                         #{v.orderIndex || 1}
                       </span>
                     </td>
@@ -656,27 +656,27 @@ const renderVideoList = (videos, onPlay) => {
                     <td className="py-2 px-3">
                       <span
                         onClick={() => onPlay(v)}
-                        className="text-[15px] font-bold text-slate-900 hover:text-primary-600 transition-colors cursor-pointer block leading-snug"
+                        className="text-sm font-bold text-slate-900 hover:text-primary-600 transition-colors cursor-pointer block leading-snug"
                         title={v.title}
                       >
                         {v.title}
                       </span>
                       {v.chapterName && (
-                        <span className="text-xs text-slate-400 font-medium block mt-0.5">
+                        <span className="text-[11px] text-slate-400 font-medium block mt-0.5">
                           {v.subjectName ? `${v.subjectName} • ` : ''}{v.chapterName}
                         </span>
                       )}
                     </td>
 
                     <td className="py-2 px-3">
-                      <span className="inline-flex items-center gap-1 text-sm font-mono text-slate-600 font-medium">
+                      <span className="inline-flex items-center gap-1 text-[13px] font-mono text-slate-600 font-medium">
                         <Clock className="w-3.5 h-3.5 text-slate-400" />
                         {v.duration && v.duration !== 'N/A' ? v.duration : 'N/A'}
                       </span>
                     </td>
 
                     <td className="py-2 px-3">
-                      <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                         Active
                       </span>
