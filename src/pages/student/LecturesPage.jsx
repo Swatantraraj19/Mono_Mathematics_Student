@@ -48,10 +48,58 @@ export const LecturesPage = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
 
-  // In-App Video Player State (Exact Admin Panel Implementation)
+  // In-App Video Player State with History-Aware Back Navigation
   const [playingVideo, setPlayingVideo] = useState(null);
   const playerContainerRef = useRef(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const modalHistoryPushedRef = useRef(false);
+
+  // Play Video: sets state & pushes silent history entry so Back button closes modal
+  const handlePlayVideo = useCallback((video) => {
+    setPlayingVideo(video);
+    if (!modalHistoryPushedRef.current) {
+      window.history.pushState({ modal: 'lecture-player' }, '');
+      modalHistoryPushedRef.current = true;
+    }
+  }, []);
+
+  // Close Video: cleans up fullscreen, clears state, and consumes the history entry safely
+  const handleCloseVideo = useCallback(() => {
+    setPlayingVideo(null);
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    }
+    if (modalHistoryPushedRef.current) {
+      modalHistoryPushedRef.current = false;
+      window.history.back();
+    }
+  }, []);
+
+  // Back button (popstate) listener with 3 safety checks
+  useEffect(() => {
+    const handlePopState = () => {
+      // Safety 1: If in fullscreen, exit fullscreen only and keep video modal open
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+        window.history.pushState({ modal: 'lecture-player' }, '');
+        return;
+      }
+
+      // Safety 2: If video modal is open, close modal only (user stays on Lectures page)
+      if (modalHistoryPushedRef.current) {
+        modalHistoryPushedRef.current = false;
+        setPlayingVideo(null);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      if (modalHistoryPushedRef.current) {
+        modalHistoryPushedRef.current = false;
+      }
+    };
+  }, []);
 
   const toggleCustomFullscreen = () => {
     if (!playerContainerRef.current) return;
@@ -445,7 +493,7 @@ export const LecturesPage = () => {
               onAction={() => setSearchQuery('')}
             />
           ) : (
-            renderVideoList(searchResults, setPlayingVideo)
+            renderVideoList(searchResults, handlePlayVideo)
           )}
         </div>
       ) : (
@@ -477,7 +525,7 @@ export const LecturesPage = () => {
               description={`No video lectures have been uploaded for "${activeChapterObj?.name || 'this chapter'}" yet.`}
             />
           ) : (
-            renderVideoList(currentChapterVideos, setPlayingVideo)
+            renderVideoList(currentChapterVideos, handlePlayVideo)
           )}
         </div>
       )}
@@ -486,7 +534,7 @@ export const LecturesPage = () => {
       {playingVideo && (
         <Modal
           isOpen={Boolean(playingVideo)}
-          onClose={() => setPlayingVideo(null)}
+          onClose={handleCloseVideo}
           title={playingVideo.title}
           subtitle={`${playingVideo.className || userProfile?.className || ''} • ${playingVideo.subjectName || activeSubjectObj?.subjectName || ''} • Chapter: ${playingVideo.chapterName || activeChapterObj?.name || ''}`}
           maxWidth="max-w-2xl"
