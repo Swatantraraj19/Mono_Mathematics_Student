@@ -288,32 +288,10 @@ export const LecturesPage = () => {
           </button>
         </div>
 
-        {/* Academic Hierarchy Selectors: Class -> Stream -> Subject -> Chapter */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 pt-1.5 sm:pt-2 border-t border-slate-100">
-          {/* Class (Student's Assigned Class) */}
-          <div>
-            <label className="text-[9px] sm:text-[10px] font-bold text-slate-400 sm:text-slate-500 uppercase tracking-wider block mb-0.5 sm:mb-1">
-              Class
-            </label>
-            <div className="w-full text-xs py-1 sm:py-2 px-2.5 bg-slate-50/70 border border-slate-200 rounded-lg font-semibold text-slate-700 truncate leading-normal">
-              {userProfile?.className || 'Class'}
-            </div>
-          </div>
-
-          {/* Stream Selector (If senior class) */}
-          {userProfile?.streamName ? (
-            <div>
-              <label className="text-[9px] sm:text-[10px] font-bold text-slate-400 sm:text-slate-500 uppercase tracking-wider block mb-0.5 sm:mb-1">
-                Stream
-              </label>
-              <div className="w-full text-xs py-1 sm:py-2 px-2.5 bg-purple-50/40 text-purple-900 border border-purple-200 rounded-lg font-semibold truncate leading-normal">
-                {userProfile.streamName}
-              </div>
-            </div>
-          ) : null}
-
+        {/* Academic Selectors: Subject -> Chapter (Only 2 options) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2 pt-1.5 sm:pt-2 border-t border-slate-100">
           {/* Subject Selector */}
-          <div className={!userProfile?.streamName ? 'col-span-1' : ''}>
+          <div>
             <label className="text-[9px] sm:text-[10px] font-bold text-slate-400 sm:text-slate-500 uppercase tracking-wider block mb-0.5 sm:mb-1">
               Subject
             </label>
@@ -321,11 +299,11 @@ export const LecturesPage = () => {
               value={selectedSubjectId}
               onChange={(e) => setSelectedSubjectId(e.target.value)}
               disabled={loadingSubjects || subjects.length === 0}
-              className="w-full text-xs py-1 sm:py-2 px-2 bg-slate-50/70 border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500 font-medium"
+              className="w-full text-xs py-1 sm:py-2 px-2.5 bg-slate-50/70 border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500 font-medium"
               aria-label="Select Subject"
             >
               {loadingSubjects ? (
-                <option value="">Loading...</option>
+                <option value="">Loading subjects...</option>
               ) : subjects.length === 0 ? (
                 <option value="">No subjects</option>
               ) : (
@@ -339,7 +317,7 @@ export const LecturesPage = () => {
           </div>
 
           {/* Chapter Selector */}
-          <div className={!userProfile?.streamName ? 'col-span-2 sm:col-span-2' : 'col-span-2 sm:col-span-1'}>
+          <div>
             <label className="text-[9px] sm:text-[10px] font-bold text-slate-400 sm:text-slate-500 uppercase tracking-wider block mb-0.5 sm:mb-1">
               Chapter
             </label>
@@ -347,7 +325,7 @@ export const LecturesPage = () => {
               value={selectedChapterId}
               onChange={(e) => setSelectedChapterId(e.target.value)}
               disabled={loadingChapters || chapters.length === 0}
-              className="w-full text-xs py-1 sm:py-2 px-2 bg-indigo-50/30 text-indigo-900 border border-indigo-200 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full text-xs py-1 sm:py-2 px-2.5 bg-indigo-50/30 text-indigo-900 border border-indigo-200 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-primary-500"
               aria-label="Select Chapter"
             >
               {loadingChapters ? (
