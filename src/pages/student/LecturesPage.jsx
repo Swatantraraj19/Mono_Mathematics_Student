@@ -1,17 +1,11 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import {
   Video,
   Play,
-  BookOpen,
   Search,
   Clock,
-  Sparkles,
   AlertCircle,
-  ExternalLink,
-  Layers,
-  GraduationCap,
-  Bookmark,
   X,
   RefreshCw,
 } from 'lucide-react';
@@ -25,10 +19,6 @@ import {
 } from '../../services/lectureService';
 import { Modal } from '../../components/common/Modal';
 import { Button } from '../../components/common/Button';
-import { Badge } from '../../components/common/Badge';
-import { Input } from '../../components/common/Input';
-import { Select } from '../../components/common/Select';
-import { SkeletonLoader } from '../../components/common/SkeletonLoader';
 import { EmptyState } from '../../components/common/EmptyState';
 
 export const LecturesPage = () => {
@@ -59,41 +49,35 @@ export const LecturesPage = () => {
   // Active Video Player Modal
   const [playingVideo, setPlayingVideo] = useState(null);
 
-  // 1. Load subjects mapped to student's class and stream
-  useEffect(() => {
-    let isMounted = true;
-    const loadSubjects = async () => {
-      if (!studentClassId) {
-        setLoadingSubjects(false);
-        return;
-      }
+  // Load subjects mapped to student's class and stream
+  const loadSubjects = useCallback(async () => {
+    if (!studentClassId) {
+      setLoadingSubjects(false);
+      return;
+    }
 
-      setLoadingSubjects(true);
-      try {
-        const subs = await fetchStudentSubjects(studentClassId, studentStreamId);
-        if (isMounted) {
-          setSubjects(subs);
-          if (subs.length > 0) {
-            const matched = subs.find((s) => s.id === initialSubjectId);
-            setSelectedSubjectId(matched ? matched.id : subs[0].id);
-          } else {
-            setSelectedSubjectId('');
-          }
-        }
-      } catch (err) {
-        console.error('Error fetching student subjects:', err);
-      } finally {
-        if (isMounted) setLoadingSubjects(false);
+    setLoadingSubjects(true);
+    try {
+      const subs = await fetchStudentSubjects(studentClassId, studentStreamId);
+      setSubjects(subs);
+      if (subs.length > 0) {
+        const matched = subs.find((s) => s.id === initialSubjectId);
+        setSelectedSubjectId(matched ? matched.id : subs[0].id);
+      } else {
+        setSelectedSubjectId('');
       }
-    };
-
-    loadSubjects();
-    return () => {
-      isMounted = false;
-    };
+    } catch (err) {
+      console.error('Error fetching student subjects:', err);
+    } finally {
+      setLoadingSubjects(false);
+    }
   }, [studentClassId, studentStreamId, initialSubjectId]);
 
-  // 2. Load chapters whenever selected subject changes
+  useEffect(() => {
+    loadSubjects();
+  }, [loadSubjects]);
+
+  // Load chapters whenever selected subject changes
   useEffect(() => {
     let isMounted = true;
     const loadChapters = async () => {
@@ -127,14 +111,13 @@ export const LecturesPage = () => {
     };
   }, [selectedSubjectId]);
 
-  // 3. Load videos whenever selected chapter changes (uses in-memory cache)
+  // Load videos whenever selected chapter changes (uses in-memory cache)
   useEffect(() => {
     let isMounted = true;
     const loadVideos = async () => {
       if (!selectedChapterId) return;
 
-      // If already cached in memory, no Firestore query needed!
-      if (chapterVideos[selectedChapterId]) return;
+      if (chapterVideos[selectedChapterId]) return; // Cache hit
 
       setLoadingVideos(true);
       try {
@@ -158,7 +141,7 @@ export const LecturesPage = () => {
     };
   }, [selectedChapterId, chapterVideos]);
 
-  // 4. Handle Search Input with debounce
+  // Search Input with debounce
   useEffect(() => {
     let isMounted = true;
     const trimmed = searchQuery.trim();
@@ -213,27 +196,25 @@ export const LecturesPage = () => {
   // Incomplete Profile Barrier
   if (!isProfileComplete) {
     return (
-      <div className="space-y-6 animate-fadeIn select-none">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
-              Recorded Lectures
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-              Access your chapter-wise syllabus and video lectures.
-            </p>
-          </div>
+      <div className="space-y-4 animate-fadeIn select-none">
+        <div>
+          <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">
+            Recorded Lectures
+          </h1>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Access your chapter-wise syllabus and video lectures.
+          </p>
         </div>
 
-        <div className="p-6 sm:p-8 rounded-3xl bg-amber-50 border border-amber-200 text-center space-y-3 max-w-lg mx-auto my-8">
-          <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mx-auto">
-            <AlertCircle className="w-6 h-6" />
+        <div className="p-6 rounded-2xl bg-amber-50 border border-amber-200 text-center space-y-3 max-w-md mx-auto my-6">
+          <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center mx-auto">
+            <AlertCircle className="w-5 h-5" />
           </div>
-          <h2 className="text-base font-bold text-amber-900">
+          <h2 className="text-sm font-bold text-amber-900">
             Profile Completion Required
           </h2>
-          <p className="text-xs text-amber-700 max-w-sm mx-auto leading-relaxed">
-            Please complete your profile by selecting your academic class (and stream for 11–12) to unlock recorded lectures.
+          <p className="text-xs text-amber-700 max-w-xs mx-auto leading-relaxed">
+            Please select your academic class in Profile to unlock recorded lectures.
           </p>
           <Link to="/profile" className="inline-block pt-1">
             <Button variant="primary" size="sm" className="font-bold bg-amber-600 hover:bg-amber-700 shadow-xs">
@@ -246,127 +227,177 @@ export const LecturesPage = () => {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-5 animate-fadeIn select-none">
-      {/* 1. Page Header (Preserved 100% as approved) */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
-            Recorded Lectures
-          </h1>
-          <div className="flex items-center gap-2 mt-0.5">
-            <span className="text-xs sm:text-sm text-slate-500">Syllabus for</span>
-            <Badge variant="primary" size="sm">
-              {userProfile?.className || 'Class'}
-              {userProfile?.streamName ? ` • ${userProfile.streamName}` : ''}
-            </Badge>
-          </div>
-        </div>
-
-        {/* Global Search Input with Instant Clear */}
-        <div className="w-full sm:w-80 relative">
-          <Input
-            type="text"
-            placeholder="Search topic or lecture..."
-            icon={Search}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="text-xs py-2 pr-8"
-            aria-label="Search lectures"
-          />
-          {searchQuery && (
-            <button
-              type="button"
-              onClick={() => setSearchQuery('')}
-              className="absolute right-0 top-0 bottom-0 w-8 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer"
-              title="Clear search"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
+    <div className="space-y-2.5 sm:space-y-3 animate-fadeIn select-none">
+      {/* 1. Page Title Header (Clean and Compact matching Admin) */}
+      <div>
+        <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight leading-tight">
+          Recorded Lectures
+        </h1>
+        <div className="flex items-center gap-1.5 mt-0.5 text-xs text-slate-500">
+          <span>Syllabus for</span>
+          <span className="font-bold text-primary-700 bg-indigo-50 border border-indigo-100 px-1.5 py-0.2 rounded text-[10px]">
+            {userProfile?.className || 'Class'}
+            {userProfile?.streamName ? ` • ${userProfile.streamName}` : ''}
+          </span>
         </div>
       </div>
 
-      {/* 2. Enterprise Academic Hierarchy Selectors Card (Admin Inspired) */}
-      <div className="student-card p-3 sm:p-4 space-y-2.5 shadow-xs border border-slate-200/80">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          {/* Subject Dropdown */}
+      {/* 2. Control Card: Search + Selectors + Summary (EXACT ADMIN PANEL LAYOUT & SIZING) */}
+      <div className="bg-white border border-slate-200/80 rounded-xl !p-2.5 sm:!p-4 space-y-2 sm:space-y-3 shadow-xs">
+        {/* Top Control Row: Search & Refresh */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className="relative flex-1">
+            <input
+              type="text"
+              placeholder="Search all video lectures across syllabus..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full text-xs py-1.5 sm:py-2 pl-8 pr-8 sm:pr-11 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white"
+              aria-label="Search Videos"
+            />
+            <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-0 top-0 bottom-0 w-8 sm:w-10 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer"
+                title="Clear search"
+              >
+                <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              </button>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              loadSubjects();
+              if (selectedChapterId) {
+                setChapterVideos((prev) => {
+                  const updated = { ...prev };
+                  delete updated[selectedChapterId];
+                  return updated;
+                });
+              }
+            }}
+            className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:text-primary-600 hover:bg-slate-50 transition-colors shrink-0 cursor-pointer"
+            title="Refresh lectures data"
+            aria-label="Refresh lectures data"
+          >
+            <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+          </button>
+        </div>
+
+        {/* Academic Hierarchy Selectors: Class -> Stream -> Subject -> Chapter */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 pt-1.5 sm:pt-2 border-t border-slate-100">
+          {/* Class (Student's Assigned Class) */}
           <div>
-            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
-              Select Subject
+            <label className="text-[9px] sm:text-[10px] font-bold text-slate-400 sm:text-slate-500 uppercase tracking-wider block mb-0.5 sm:mb-1">
+              Class
             </label>
-            <Select
+            <div className="w-full text-xs py-1 sm:py-2 px-2.5 bg-slate-50/70 border border-slate-200 rounded-lg font-semibold text-slate-700 truncate leading-normal">
+              {userProfile?.className || 'Class'}
+            </div>
+          </div>
+
+          {/* Stream Selector (If senior class) */}
+          {userProfile?.streamName ? (
+            <div>
+              <label className="text-[9px] sm:text-[10px] font-bold text-slate-400 sm:text-slate-500 uppercase tracking-wider block mb-0.5 sm:mb-1">
+                Stream
+              </label>
+              <div className="w-full text-xs py-1 sm:py-2 px-2.5 bg-purple-50/40 text-purple-900 border border-purple-200 rounded-lg font-semibold truncate leading-normal">
+                {userProfile.streamName}
+              </div>
+            </div>
+          ) : null}
+
+          {/* Subject Selector */}
+          <div className={!userProfile?.streamName ? 'col-span-1' : ''}>
+            <label className="text-[9px] sm:text-[10px] font-bold text-slate-400 sm:text-slate-500 uppercase tracking-wider block mb-0.5 sm:mb-1">
+              Subject
+            </label>
+            <select
               value={selectedSubjectId}
               onChange={(e) => setSelectedSubjectId(e.target.value)}
               disabled={loadingSubjects || subjects.length === 0}
-              placeholder={loadingSubjects ? 'Loading subjects...' : 'Select Subject'}
-              options={subjects.map((s) => ({
-                value: s.id,
-                label: s.subjectName,
-              }))}
+              className="w-full text-xs py-1 sm:py-2 px-2 bg-slate-50/70 border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500 font-medium"
               aria-label="Select Subject"
-            />
+            >
+              {loadingSubjects ? (
+                <option value="">Loading...</option>
+              ) : subjects.length === 0 ? (
+                <option value="">No subjects</option>
+              ) : (
+                subjects.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.subjectName}
+                  </option>
+                ))
+              )}
+            </select>
           </div>
 
-          {/* Chapter Dropdown */}
-          <div>
-            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
-              Select Chapter
+          {/* Chapter Selector */}
+          <div className={!userProfile?.streamName ? 'col-span-2 sm:col-span-2' : 'col-span-2 sm:col-span-1'}>
+            <label className="text-[9px] sm:text-[10px] font-bold text-slate-400 sm:text-slate-500 uppercase tracking-wider block mb-0.5 sm:mb-1">
+              Chapter
             </label>
-            <Select
+            <select
               value={selectedChapterId}
               onChange={(e) => setSelectedChapterId(e.target.value)}
               disabled={loadingChapters || chapters.length === 0}
-              placeholder={
-                loadingChapters
-                  ? 'Loading chapters...'
-                  : chapters.length === 0
-                  ? 'No chapters in this subject'
-                  : 'Select Chapter'
-              }
-              options={chapters.map((ch) => ({
-                value: ch.id,
-                label: `#${ch.chapterNumber} ${ch.name}`,
-              }))}
+              className="w-full text-xs py-1 sm:py-2 px-2 bg-indigo-50/30 text-indigo-900 border border-indigo-200 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-primary-500"
               aria-label="Select Chapter"
-            />
+            >
+              {loadingChapters ? (
+                <option value="">Loading chapters...</option>
+              ) : chapters.length === 0 ? (
+                <option value="">No chapters in this subject</option>
+              ) : (
+                chapters.map((ch) => (
+                  <option key={ch.id} value={ch.id}>
+                    #{ch.chapterNumber} {ch.name}
+                  </option>
+                ))
+              )}
+            </select>
           </div>
         </div>
 
-        {/* Dynamic Summary Strip / Search State */}
+        {/* Compact Result Summary Line (Admin exact match) */}
         {!loadingSubjects && (
-          <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600 flex-wrap gap-2">
+          <div className="pt-1.5 sm:pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] sm:text-xs text-slate-500 flex-wrap gap-1">
             {searchQuery.trim() ? (
-              <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-primary-500 shrink-0"></span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary-500 shrink-0"></span>
                 <span>
-                  Search results for "<strong>{searchQuery.trim()}</strong>":
+                  Search for "<strong>{searchQuery.trim()}</strong>":
                 </span>
-                <span className="font-bold text-primary-700 bg-primary-50 px-2 py-0.5 rounded-md text-[11px]">
-                  {searchResults.length} lecture{searchResults.length !== 1 ? 's' : ''} found
+                <span className="font-semibold text-primary-700 bg-primary-50 px-2 py-0.2 rounded text-[10px] sm:text-[11px]">
+                  {searchResults.length} matching lecture{searchResults.length !== 1 ? 's' : ''}
                 </span>
-              </div>
-            ) : selectedChapterId && activeChapterObj ? (
-              <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
-                <span className="font-bold text-slate-800">
-                  {currentChapterVideos.length} Lecture{currentChapterVideos.length !== 1 ? 's' : ''} in this chapter
-                </span>
-                <span className="text-slate-300 hidden sm:inline">•</span>
-                <span className="text-slate-500 hidden sm:inline font-medium text-[11px]">
-                  Ch #{activeChapterObj.chapterNumber}: {activeChapterObj.name}
-                </span>
-              </div>
-            ) : (
-              <span className="text-slate-400 text-xs">
-                Select a subject and chapter above to browse recorded lectures.
               </span>
+            ) : selectedChapterId && activeChapterObj ? (
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+                <span className="text-slate-700 font-medium">
+                  {currentChapterVideos.length} lecture{currentChapterVideos.length !== 1 ? 's' : ''} in this chapter
+                </span>
+                <span className="text-slate-400 hidden sm:inline">•</span>
+                <span className="text-slate-400 hidden sm:inline text-[11px]">
+                  Ch #{activeChapterObj.chapterNumber} {activeChapterObj.name}
+                </span>
+              </span>
+            ) : (
+              <span className="text-slate-400 text-[10px] sm:text-[11px]">Select a chapter above to view lectures</span>
             )}
 
             {searchQuery.trim() && (
               <button
                 type="button"
                 onClick={() => setSearchQuery('')}
-                className="text-xs font-semibold text-primary-600 hover:text-primary-800 hover:underline cursor-pointer"
+                className="text-[10px] sm:text-[11px] font-semibold text-primary-600 hover:text-primary-800 hover:underline cursor-pointer"
               >
                 Back to chapter view
               </button>
@@ -375,38 +406,68 @@ export const LecturesPage = () => {
         )}
       </div>
 
-      {/* 3. Main Content: Video Lectures Grid (Admin Pattern) */}
+      {/* 3. Main Content: Video Lectures Area */}
       {loadingSubjects || loadingChapters ? (
-        <SkeletonLoader variant="grid" rows={2} />
+        <div className="space-y-2">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-white border border-slate-200/80 rounded-xl !p-2 flex items-center gap-2.5 animate-pulse shadow-2xs">
+              <div className="w-16 h-10 bg-slate-200 rounded-md shrink-0"></div>
+              <div className="flex-1 space-y-1">
+                <div className="h-3 bg-slate-200 rounded w-1/3"></div>
+                <div className="h-2.5 bg-slate-100 rounded w-1/4"></div>
+              </div>
+              <div className="w-6 h-6 bg-slate-100 rounded shrink-0"></div>
+            </div>
+          ))}
+        </div>
       ) : searchQuery.trim() ? (
         /* ======================== GLOBAL SEARCH VIEW ======================== */
         <div>
           {isSearching ? (
-            <SkeletonLoader variant="grid" rows={2} />
+            <div className="space-y-2">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="bg-white border border-slate-200/80 rounded-xl !p-2 flex items-center gap-2.5 animate-pulse shadow-2xs">
+                  <div className="w-16 h-10 bg-slate-200 rounded-md shrink-0"></div>
+                  <div className="flex-1 space-y-1">
+                    <div className="h-3 bg-slate-200 rounded w-1/3"></div>
+                    <div className="h-2.5 bg-slate-100 rounded w-1/4"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : searchResults.length === 0 ? (
             <EmptyState
               icon={Search}
               title="No Matching Lectures Found"
-              description={`No lectures found matching "${searchQuery}". Try searching for another topic or concept.`}
+              description={`No lectures found matching "${searchQuery}". Try another keyword or topic.`}
               actionLabel="Clear Search"
               onAction={() => setSearchQuery('')}
             />
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
-              {searchResults.map((v) => renderVideoCard(v, () => setPlayingVideo(v)))}
-            </div>
+            renderVideoList(searchResults, setPlayingVideo)
           )}
         </div>
       ) : (
         /* ======================== CHAPTER-SCOPED VIEW ======================== */
         <div>
           {loadingVideos ? (
-            <SkeletonLoader variant="grid" rows={2} />
+            <div className="space-y-2">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="bg-white border border-slate-200/80 rounded-xl !p-2 flex items-center gap-2.5 animate-pulse shadow-2xs">
+                  <div className="w-16 h-10 bg-slate-200 rounded-md shrink-0"></div>
+                  <div className="flex-1 space-y-1">
+                    <div className="h-3 bg-slate-200 rounded w-1/3"></div>
+                    <div className="h-2.5 bg-slate-100 rounded w-1/4"></div>
+                  </div>
+                  <div className="w-6 h-6 bg-slate-100 rounded shrink-0"></div>
+                </div>
+              ))}
+            </div>
           ) : !selectedChapterId ? (
             <EmptyState
-              icon={Bookmark}
+              icon={Video}
               title="No Chapter Selected"
-              description="Please select an academic subject and chapter above to view recorded lectures."
+              description="Please select a subject and chapter above to view recorded lectures."
             />
           ) : currentChapterVideos.length === 0 ? (
             <EmptyState
@@ -415,22 +476,12 @@ export const LecturesPage = () => {
               description={`No video lectures have been uploaded for "${activeChapterObj?.name || 'this chapter'}" yet.`}
             />
           ) : (
-            <>
-              {/* Desktop & Tablet: 3-Column SaaS Card Grid (>= 640px) */}
-              <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {currentChapterVideos.map((v) => renderVideoCard(v, () => setPlayingVideo(v)))}
-              </div>
-
-              {/* Mobile: High-Density List (< 640px) */}
-              <div className="grid grid-cols-1 gap-2.5 sm:hidden">
-                {currentChapterVideos.map((v) => renderMobileVideoCard(v, () => setPlayingVideo(v)))}
-              </div>
-            </>
+            renderVideoList(currentChapterVideos, setPlayingVideo)
           )}
         </div>
       )}
 
-      {/* 4. Theater Mode Video Player Modal */}
+      {/* 4. Video Player Modal */}
       {playingVideo && (
         <Modal
           isOpen={Boolean(playingVideo)}
@@ -439,9 +490,9 @@ export const LecturesPage = () => {
           subtitle={`${playingVideo.subjectName || activeSubjectObj?.subjectName || 'Subject'} • ${playingVideo.chapterName || activeChapterObj?.name || 'Chapter'}`}
           maxWidth="max-w-4xl"
         >
-          <div className="space-y-4">
+          <div className="space-y-3">
             {/* 16:9 Responsive Embed */}
-            <div className="aspect-video w-full rounded-2xl overflow-hidden bg-black shadow-lg">
+            <div className="aspect-video w-full rounded-xl overflow-hidden bg-black shadow-lg">
               {activeYouTubeId ? (
                 <iframe
                   src={`https://www.youtube-nocookie.com/embed/${activeYouTubeId}?autoplay=1&rel=0&modestbranding=1`}
@@ -461,11 +512,11 @@ export const LecturesPage = () => {
             {/* Video Meta Info Footer */}
             <div className="flex items-center justify-between gap-2 text-xs text-slate-600 flex-wrap pt-1 border-t border-slate-100">
               <div className="flex items-center gap-2">
-                <span className="font-bold text-primary-700 bg-primary-50 px-2 py-0.5 rounded-md">
+                <span className="font-bold text-primary-700 bg-primary-50 px-2 py-0.5 rounded-md text-[11px]">
                   Lecture #{playingVideo.orderIndex || 1}
                 </span>
                 {playingVideo.duration && playingVideo.duration !== 'N/A' && (
-                  <span className="flex items-center gap-1 text-slate-500 font-mono">
+                  <span className="flex items-center gap-1 text-slate-500 font-mono text-[11px]">
                     <Clock className="w-3.5 h-3.5 text-slate-400" />
                     {playingVideo.duration}
                   </span>
@@ -476,7 +527,7 @@ export const LecturesPage = () => {
                 variant="secondary"
                 size="sm"
                 onClick={() => setPlayingVideo(null)}
-                className="text-xs font-semibold"
+                className="text-xs font-semibold py-1 px-3"
               >
                 Close Player
               </Button>
@@ -489,156 +540,187 @@ export const LecturesPage = () => {
 };
 
 /**
- * Desktop Video Card Component
+ * Render Video List:
+ * - Mobile (< 640px): High-Density Compact Cards (EXACT ADMIN PANEL LAYOUT & SIZING)
+ * - Desktop (>= 640px): High-Density Table (EXACT ADMIN PANEL LAYOUT & SIZING)
  */
-const renderVideoCard = (v, onPlay) => {
-  const ytId = v.youtubeVideoId || extractYouTubeVideoId(v.videoUrl);
-  const thumb = v.thumbnailUrl || (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : null);
-
+const renderVideoList = (videos, onPlay) => {
   return (
-    <div
-      key={v.id}
-      className="student-card student-card-hover p-3.5 sm:p-4 flex flex-col justify-between space-y-3 group border border-slate-200/80 hover:border-primary-300 transition-all shadow-xs"
-    >
-      <div className="space-y-2.5">
-        {/* 16:9 YouTube Thumbnail Container with Play Overlay */}
-        <div
-          onClick={onPlay}
-          className="relative aspect-video w-full rounded-xl bg-slate-900 overflow-hidden shrink-0 group cursor-pointer shadow-xs border border-slate-200/60"
-          title="Click to watch lecture"
-        >
-          {thumb ? (
-            <img
-              src={thumb}
-              alt={v.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              loading="lazy"
-            />
-          ) : (
-            <div className="w-full h-full bg-slate-800 flex items-center justify-center text-slate-500">
-              <Video className="w-8 h-8" />
+    <>
+      {/* 1. Mobile High-Density Compact Cards (< 640px) - EXACT ADMIN PANEL MATCH */}
+      <div className="grid grid-cols-1 gap-1.5 sm:hidden">
+        {videos.map((v) => {
+          const ytId = v.youtubeVideoId || extractYouTubeVideoId(v.videoUrl);
+          const thumb = v.thumbnailUrl || (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : null);
+
+          return (
+            <div
+              key={v.id}
+              className="bg-white border border-slate-200/80 rounded-xl !p-2 flex items-center justify-between gap-2 hover:border-primary-200 transition-colors shadow-2xs"
+            >
+              {/* Left: Thumbnail with Click-to-play */}
+              <div
+                onClick={() => onPlay(v)}
+                className="relative w-16 h-10 rounded-md bg-slate-900 overflow-hidden shrink-0 group cursor-pointer border border-slate-200 shadow-2xs"
+                title="Click to preview lecture"
+              >
+                {thumb ? (
+                  <img
+                    src={thumb}
+                    alt={v.title}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-slate-800 flex items-center justify-center text-slate-500">
+                    <Video className="w-4 h-4" />
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-slate-900/30 flex items-center justify-center">
+                  <Play className="w-3 h-3 text-white fill-white" />
+                </div>
+              </div>
+
+              {/* Middle: Title & Meta */}
+              <div className="min-w-0 flex-1">
+                <h4
+                  onClick={() => onPlay(v)}
+                  className="text-xs font-bold text-slate-900 leading-tight truncate cursor-pointer hover:text-primary-600 transition-colors"
+                  title={v.title}
+                >
+                  {v.title}
+                </h4>
+                <div className="flex items-center gap-1.5 text-[10px] text-slate-500 mt-0.5">
+                  <span className="font-mono font-bold text-primary-700 bg-indigo-50 px-1 py-0.2 rounded">
+                    #{v.orderIndex || 1}
+                  </span>
+                  <span>•</span>
+                  <span className="text-emerald-600 font-medium">
+                    Active
+                  </span>
+                  {v.duration && v.duration !== 'N/A' && (
+                    <>
+                      <span>•</span>
+                      <span className="font-mono text-slate-400">{v.duration}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Right: Actions */}
+              <div className="flex items-center gap-0.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => onPlay(v)}
+                  className="p-1.5 rounded-md text-primary-600 hover:bg-primary-50 active:bg-primary-100 cursor-pointer"
+                  title="Watch Lecture"
+                  aria-label="Watch lecture"
+                >
+                  <Play className="w-3.5 h-3.5 fill-primary-600" />
+                </button>
+              </div>
             </div>
-          )}
-
-          <div className="absolute inset-0 bg-slate-900/30 group-hover:bg-slate-900/15 transition-colors flex items-center justify-center">
-            <div className="w-10 h-10 rounded-full bg-primary-600/90 text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
-              <Play className="w-4 h-4 fill-white ml-0.5" />
-            </div>
-          </div>
-
-          {v.duration && v.duration !== 'N/A' && (
-            <span className="absolute bottom-1.5 right-1.5 bg-black/80 backdrop-blur-xs text-white text-[10px] font-mono px-1.5 py-0.5 rounded-md flex items-center gap-1">
-              <Clock className="w-3 h-3 text-slate-300" />
-              {v.duration}
-            </span>
-          )}
-        </div>
-
-        {/* Lecture Meta & Title */}
-        <div>
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="font-mono text-[10px] font-bold px-1.5 py-0.2 bg-indigo-50 text-primary-700 rounded-md">
-              Lecture #{v.orderIndex || 1}
-            </span>
-            {v.chapterName && (
-              <span className="text-[10px] text-slate-400 font-medium truncate max-w-[150px]">
-                • {v.chapterName}
-              </span>
-            )}
-          </div>
-          <h3
-            onClick={onPlay}
-            className="text-sm font-bold text-slate-900 line-clamp-2 mt-1.5 group-hover:text-primary-600 transition-colors cursor-pointer leading-snug"
-            title={v.title}
-          >
-            {v.title}
-          </h3>
-        </div>
+          );
+        })}
       </div>
 
-      {/* Card Action Footer */}
-      <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-        <span className="text-[11px] font-semibold text-slate-400">Video Lecture</span>
-        <Button
-          variant="primary"
-          size="sm"
-          icon={Play}
-          onClick={onPlay}
-          className="text-xs font-bold shadow-xs py-1.5 px-3"
-        >
-          Watch Lecture
-        </Button>
-      </div>
-    </div>
-  );
-};
+      {/* 2. Desktop High-Density Table (>= 640px) - EXACT ADMIN PANEL MATCH */}
+      <div className="hidden sm:block w-full overflow-hidden bg-white border border-slate-200/80 rounded-xl shadow-xs">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50/75 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                <th className="py-2.5 px-3 w-16">L #</th>
+                <th className="py-2.5 px-3 w-24">Preview</th>
+                <th className="py-2.5 px-3">Lecture Title</th>
+                <th className="py-2.5 px-3 w-28">Duration</th>
+                <th className="py-2.5 px-3 w-24">Status</th>
+                <th className="py-2.5 px-3 text-right w-24 pr-4">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 text-xs">
+              {videos.map((v) => {
+                const ytId = v.youtubeVideoId || extractYouTubeVideoId(v.videoUrl);
+                const thumb = v.thumbnailUrl || (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : null);
 
-/**
- * Mobile High-Density Video Card (< 640px)
- */
-const renderMobileVideoCard = (v, onPlay) => {
-  const ytId = v.youtubeVideoId || extractYouTubeVideoId(v.videoUrl);
-  const thumb = v.thumbnailUrl || (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : null);
+                return (
+                  <tr key={v.id} className="hover:bg-slate-50/60 transition-colors">
+                    <td className="py-2 px-3">
+                      <span className="font-mono text-xs font-bold px-2 py-0.5 bg-indigo-50 text-primary-700 rounded-md">
+                        #{v.orderIndex || 1}
+                      </span>
+                    </td>
 
-  return (
-    <div
-      key={v.id}
-      onClick={onPlay}
-      className="student-card !p-2.5 flex items-center justify-between gap-3 hover:border-primary-200 transition-colors shadow-2xs cursor-pointer active:bg-slate-50"
-    >
-      {/* Left: 16:9 Thumbnail with Play Icon */}
-      <div className="relative w-22 h-14 rounded-lg bg-slate-900 overflow-hidden shrink-0 border border-slate-200 shadow-2xs">
-        {thumb ? (
-          <img
-            src={thumb}
-            alt={v.title}
-            className="w-full h-full object-cover"
-            loading="lazy"
-          />
-        ) : (
-          <div className="w-full h-full bg-slate-800 flex items-center justify-center text-slate-500">
-            <Video className="w-5 h-5" />
-          </div>
-        )}
-        <div className="absolute inset-0 bg-slate-900/30 flex items-center justify-center">
-          <div className="w-6 h-6 rounded-full bg-white/90 text-primary-700 flex items-center justify-center shadow-xs">
-            <Play className="w-3 h-3 fill-primary-700 ml-0.5" />
-          </div>
-        </div>
-      </div>
+                    <td className="py-2 px-3">
+                      <div
+                        onClick={() => onPlay(v)}
+                        className="relative w-16 h-10 rounded-md bg-slate-900 overflow-hidden shrink-0 group cursor-pointer border border-slate-200 shadow-2xs"
+                        title="Click to watch lecture"
+                      >
+                        {thumb ? (
+                          <img
+                            src={thumb}
+                            alt={v.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-slate-800 flex items-center justify-center text-slate-500">
+                            <Video className="w-4 h-4" />
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-slate-900/30 flex items-center justify-center group-hover:bg-slate-900/10 transition-colors">
+                          <Play className="w-3.5 h-3.5 text-white fill-white" />
+                        </div>
+                      </div>
+                    </td>
 
-      {/* Middle: Title & Meta */}
-      <div className="min-w-0 flex-1">
-        <h4 className="text-xs font-bold text-slate-900 leading-tight line-clamp-2" title={v.title}>
-          {v.title}
-        </h4>
-        <div className="flex items-center gap-1.5 text-[10px] text-slate-500 mt-1">
-          <span className="font-mono font-bold text-primary-700 bg-indigo-50 px-1 py-0.2 rounded">
-            #{v.orderIndex || 1}
-          </span>
-          {v.duration && v.duration !== 'N/A' && (
-            <>
-              <span>•</span>
-              <span className="font-mono text-slate-400">{v.duration}</span>
-            </>
-          )}
+                    <td className="py-2 px-3">
+                      <span
+                        onClick={() => onPlay(v)}
+                        className="text-sm font-bold text-slate-900 hover:text-primary-600 transition-colors cursor-pointer block leading-snug"
+                        title={v.title}
+                      >
+                        {v.title}
+                      </span>
+                      {v.chapterName && (
+                        <span className="text-[11px] text-slate-400 font-medium block mt-0.5">
+                          {v.subjectName ? `${v.subjectName} • ` : ''}{v.chapterName}
+                        </span>
+                      )}
+                    </td>
+
+                    <td className="py-2 px-3">
+                      <span className="inline-flex items-center gap-1 text-xs font-mono text-slate-600 font-medium">
+                        <Clock className="w-3 h-3 text-slate-400" />
+                        {v.duration && v.duration !== 'N/A' ? v.duration : 'N/A'}
+                      </span>
+                    </td>
+
+                    <td className="py-2 px-3">
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                        Active
+                      </span>
+                    </td>
+
+                    <td className="py-2 px-3 text-right pr-4">
+                      <button
+                        type="button"
+                        onClick={() => onPlay(v)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold bg-primary-50 text-primary-700 hover:bg-primary-100 transition-colors cursor-pointer"
+                      >
+                        <Play className="w-3 h-3 fill-primary-700" />
+                        Watch
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
-
-      {/* Right: Watch Action Button */}
-      <div className="shrink-0">
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onPlay();
-          }}
-          className="w-8 h-8 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center hover:bg-primary-100 transition-colors"
-          title="Watch lecture"
-        >
-          <Play className="w-3.5 h-3.5 fill-primary-600 ml-0.5" />
-        </button>
-      </div>
-    </div>
+    </>
   );
 };
