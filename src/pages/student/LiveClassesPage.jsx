@@ -241,7 +241,10 @@ export const LiveClassesPage = () => {
                   <div className="py-2 px-2.5 rounded-xl bg-slate-50 border border-slate-100 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-600 font-medium">
                     <div className="flex items-center gap-1.5">
                       <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                      <span>{formatDateDisplay(item.date)}</span>
+                      <span>
+                        {formatDateDisplay(item.date)}
+                        {item.endDate && item.endDate !== item.date ? ` – ${formatDateDisplay(item.endDate)}` : ''}
+                      </span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />

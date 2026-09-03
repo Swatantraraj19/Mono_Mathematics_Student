@@ -42,10 +42,11 @@ export const computeLiveClassStatus = (liveClass) => {
     const [startHours, startMinutes] = (liveClass.startTime || '00:00').split(':').map(Number);
     const startDateTime = new Date(`${liveClass.date}T${String(startHours).padStart(2, '0')}:${String(startMinutes).padStart(2, '0')}:00`);
 
+    const effectiveEndDate = liveClass.endDate || liveClass.date;
     let endDateTime;
     if (liveClass.endTime) {
       const [endHours, endMinutes] = liveClass.endTime.split(':').map(Number);
-      endDateTime = new Date(`${liveClass.date}T${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}:00`);
+      endDateTime = new Date(`${effectiveEndDate}T${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}:00`);
     } else {
       endDateTime = new Date(startDateTime.getTime() + 60 * 60 * 1000);
     }
