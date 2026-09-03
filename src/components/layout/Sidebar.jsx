@@ -79,35 +79,36 @@ export const Sidebar = ({ className = '', onItemClick }) => {
             </NavLink>
           );
         })}
+        {/* Divider line before Logout */}
+        <div className="pt-2 pb-1 px-1">
+          <div className="border-t border-slate-200/80" />
+        </div>
+
+        {/* Logout Menu Row */}
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="group w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 hover:text-red-600 hover:bg-red-50/80 transition-all duration-150 cursor-pointer"
+        >
+          <LogOut className="w-4 h-4 text-red-500 transition-colors group-hover:text-red-600 shrink-0" />
+          <span className="truncate font-semibold">Logout</span>
+        </button>
       </nav>
 
-      {/* User Profile & Logout Footer */}
+      {/* User Profile Footer */}
       <div className="p-3 border-t border-slate-100 shrink-0 bg-slate-50/70">
-        <div className="p-2.5 rounded-2xl bg-white border border-slate-200 shadow-xs flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-xl bg-primary-100 text-primary-700 font-bold text-xs flex items-center justify-center shrink-0">
-              {userProfile?.name?.charAt(0).toUpperCase() || 'S'}
-            </div>
-            <div className="min-w-0 flex flex-col">
-              <span className="text-xs font-bold text-slate-900 truncate">
-                {userProfile?.name || 'Student'}
-              </span>
-              <span className="text-[10px] text-slate-500 truncate max-w-[100px]" title={userProfile?.email}>
-                {userProfile?.email}
-              </span>
-            </div>
+        <div className="p-2.5 rounded-2xl bg-white border border-slate-200 shadow-xs flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-primary-100 text-primary-700 font-bold text-xs flex items-center justify-center shrink-0">
+            {userProfile?.name?.charAt(0).toUpperCase() || 'S'}
           </div>
-
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-status-error hover:bg-red-50 border border-slate-200 hover:border-red-200 transition-colors shrink-0 cursor-pointer shadow-xs active:bg-red-100"
-            title="Logout"
-            aria-label="Logout"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline text-[11px]">Logout</span>
-          </button>
+          <div className="min-w-0 flex flex-col">
+            <span className="text-xs font-bold text-slate-900 truncate">
+              {userProfile?.name || 'Student'}
+            </span>
+            <span className="text-[10px] text-slate-500 truncate max-w-[150px]" title={userProfile?.email}>
+              {userProfile?.email}
+            </span>
+          </div>
         </div>
       </div>
     </aside>
