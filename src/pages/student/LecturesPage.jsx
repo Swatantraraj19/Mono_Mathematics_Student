@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import {
   Video,
   Play,
   Search,
   Clock,
-  AlertCircle,
   X,
   RefreshCw,
+  Maximize,
+  Minimize,
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import {
@@ -46,8 +47,29 @@ export const LecturesPage = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
 
-  // Active Video Player Modal
+  // In-App Video Player State (Exact Admin Panel Implementation)
   const [playingVideo, setPlayingVideo] = useState(null);
+  const playerContainerRef = useRef(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const toggleCustomFullscreen = () => {
+    if (!playerContainerRef.current) return;
+    if (!document.fullscreenElement) {
+      playerContainerRef.current.requestFullscreen().catch(() => {});
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen().catch(() => {});
+      setIsFullscreen(false);
+    }
+  };
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement));
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
 
   // Load subjects mapped to student's class and stream
   const loadSubjects = useCallback(async () => {
@@ -459,57 +481,85 @@ export const LecturesPage = () => {
         </div>
       )}
 
-      {/* 4. Video Player Modal */}
+      {/* In-App Video Player Modal (EXACT ADMIN PANEL IMPLEMENTATION WITH SECURITY OVERLAYS) */}
       {playingVideo && (
         <Modal
           isOpen={Boolean(playingVideo)}
           onClose={() => setPlayingVideo(null)}
           title={playingVideo.title}
-          subtitle={`${playingVideo.subjectName || activeSubjectObj?.subjectName || 'Subject'} • ${playingVideo.chapterName || activeChapterObj?.name || 'Chapter'}`}
-          maxWidth="max-w-4xl"
+          subtitle={`${playingVideo.className || userProfile?.className || ''} • ${playingVideo.subjectName || activeSubjectObj?.subjectName || ''} • Chapter: ${playingVideo.chapterName || activeChapterObj?.name || ''}`}
+          maxWidth="max-w-2xl"
+          closeOnBackdropClick={false}
         >
-          <div className="space-y-3">
-            {/* 16:9 Responsive Embed */}
-            <div className="aspect-video w-full rounded-xl overflow-hidden bg-black shadow-lg">
-              {activeYouTubeId ? (
-                <iframe
-                  src={`https://www.youtube-nocookie.com/embed/${activeYouTubeId}?autoplay=1&rel=0&modestbranding=1`}
-                  title={playingVideo.title}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  className="w-full h-full border-0"
-                />
+          {/* Modal Header Bar Controls */}
+          <div className="flex items-center justify-between pb-2 mb-1 border-b border-slate-100">
+            <span className="text-xs font-semibold text-slate-500">
+              Lecture Video Player
+            </span>
+            <button
+              type="button"
+              onClick={toggleCustomFullscreen}
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-900 hover:bg-black text-white text-xs font-semibold shadow-xs transition-all cursor-pointer"
+            >
+              {isFullscreen ? (
+                <>
+                  <Minimize className="w-3.5 h-3.5 text-primary-400" />
+                  <span>Exit Fullscreen</span>
+                </>
               ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 p-6 text-center space-y-2">
-                  <AlertCircle className="w-8 h-8 text-amber-500" />
-                  <p className="text-xs sm:text-sm">Unable to load video stream for this lecture.</p>
-                </div>
+                <>
+                  <Maximize className="w-3.5 h-3.5 text-primary-400" />
+                  <span>Full Screen</span>
+                </>
               )}
-            </div>
+            </button>
+          </div>
 
-            {/* Video Meta Info Footer */}
-            <div className="flex items-center justify-between gap-2 text-xs text-slate-600 flex-wrap pt-1 border-t border-slate-100">
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-primary-700 bg-primary-50 px-2 py-0.5 rounded-md text-[11px]">
-                  Lecture #{playingVideo.orderIndex || 1}
-                </span>
-                {playingVideo.duration && playingVideo.duration !== 'N/A' && (
-                  <span className="flex items-center gap-1 text-slate-500 font-mono text-[11px]">
-                    <Clock className="w-3.5 h-3.5 text-slate-400" />
-                    {playingVideo.duration}
-                  </span>
-                )}
-              </div>
+          <div
+            ref={playerContainerRef}
+            className="relative aspect-video w-full bg-black rounded-xl overflow-hidden shadow-lg border border-slate-800 select-none flex items-center justify-center"
+          >
+            <iframe
+              src={`https://www.youtube.com/embed/${playingVideo.youtubeVideoId || extractYouTubeVideoId(playingVideo.videoUrl)}?autoplay=1&rel=0&modestbranding=1&iv_load_policy=3&playsinline=1`}
+              title={playingVideo.title}
+              className="w-full h-full border-none"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            />
 
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setPlayingVideo(null)}
-                className="text-xs font-semibold py-1 px-3"
+            {/* Percentage-Based Top Left Overlay: Mobile ke liye 75% width & 26% height, Desktop ke liye exact 70% width & 17% height */}
+            <div
+              className={`absolute top-0 left-0 z-20 pointer-events-auto bg-transparent cursor-default select-none ${
+                isFullscreen ? 'w-[70%] h-[18%] sm:h-[17%]' : 'w-[55%] sm:w-[70%] h-[30%] sm:h-[17%]'
+              }`}
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+              onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+              onTouchStart={(e) => { e.preventDefault(); e.stopPropagation(); }}
+              onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+            />
+
+            {/* Floating Exit Fullscreen Button (Appears ONLY in Fullscreen mode at Top Center, keeping Settings Gear 100% visible) */}
+            {isFullscreen && (
+              <button
+                type="button"
+                onClick={toggleCustomFullscreen}
+                className="absolute top-2.5 left-2.5 sm:top-4 sm:left-1/2 sm:-translate-x-1/2 z-40 inline-flex items-center gap-1 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-lg sm:rounded-xl bg-slate-900/90 hover:bg-black text-white text-[11px] sm:text-xs font-semibold shadow-xl border border-slate-700 transition-all cursor-pointer backdrop-blur-md pointer-events-auto"
+                title="Exit Fullscreen"
               >
-                Close Player
-              </Button>
-            </div>
+                <Minimize className="w-4 h-4 text-primary-400" />
+                <span>Exit Fullscreen</span>
+              </button>
+            )}
+
+            {/* Dynamic State-Aware Bottom Overlay: Auto-calibrates height for Mobile Normal (30px), Mobile Fullscreen (42px), Desktop Normal (52px), and Desktop Fullscreen (64px) */}
+            <div
+              className={`absolute bottom-0 left-0 right-0 z-30 pointer-events-auto bg-transparent cursor-default select-none ${
+                isFullscreen ? 'h-[58px] sm:h-[64px]' : 'h-[45px] sm:h-[64px]'
+              }`}
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+              onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+              onTouchStart={(e) => { e.preventDefault(); e.stopPropagation(); }}
+              onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+            />
           </div>
         </Modal>
       )}
