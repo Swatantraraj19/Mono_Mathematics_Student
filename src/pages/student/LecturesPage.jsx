@@ -5,6 +5,7 @@ import {
   Play,
   Search,
   Clock,
+  AlertCircle,
   X,
   RefreshCw,
   Maximize,
@@ -218,7 +219,7 @@ export const LecturesPage = () => {
   // Incomplete Profile Barrier
   if (!isProfileComplete) {
     return (
-      <div className="space-y-4 animate-fadeIn select-none">
+      <div className="space-y-4 select-none">
         <div>
           <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">
             Recorded Lectures
@@ -249,7 +250,7 @@ export const LecturesPage = () => {
   }
 
   return (
-    <div className="space-y-2.5 sm:space-y-3 animate-fadeIn select-none">
+    <div className="space-y-2.5 sm:space-y-3 select-none">
       {/* 1. Page Title Header (Clean and Compact matching Admin) */}
       <div>
         <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight leading-tight">
