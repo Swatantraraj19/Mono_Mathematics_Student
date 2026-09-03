@@ -198,7 +198,7 @@ export const LiveClassesPage = () => {
           }
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
           {filteredClasses.map((item) => {
             const isLive = item.computedStatus === 'live';
             const isUpcoming = item.computedStatus === 'upcoming';
@@ -208,20 +208,20 @@ export const LiveClassesPage = () => {
             return (
               <div
                 key={item.id}
-                className={`student-card p-5 space-y-4 flex flex-col justify-between transition-all ${
+                className={`student-card p-3.5 sm:p-4 space-y-3 flex flex-col justify-between transition-all ${
                   isLive
-                    ? 'border-rose-300 bg-gradient-to-br from-rose-50/40 to-white ring-1 ring-rose-200 shadow-md'
+                    ? 'border-rose-300 bg-gradient-to-br from-rose-50/40 to-white ring-1 ring-rose-200 shadow-sm'
                     : 'bg-white'
                 }`}
               >
-                <div className="space-y-3">
+                <div className="space-y-2.5">
                   {/* Top Status & Subject Info */}
                   <div className="flex items-start justify-between gap-2">
-                    <div className="space-y-1 min-w-0">
+                    <div className="space-y-0.5 min-w-0">
                       <span className="text-[10px] font-bold text-primary-700 uppercase tracking-wider block truncate">
                         {item.subjectName || 'Mathematics'}
                       </span>
-                      <h2 className="text-sm sm:text-base font-bold text-slate-900 line-clamp-2">
+                      <h2 className="text-sm sm:text-base font-bold text-slate-900 line-clamp-1">
                         {item.title}
                       </h2>
                     </div>
@@ -237,15 +237,15 @@ export const LiveClassesPage = () => {
                     </Badge>
                   </div>
 
-                  {/* Date & Time Slot Information */}
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 space-y-1.5 text-xs text-slate-600 font-medium">
-                    <div className="flex items-center gap-2">
+                  {/* Date & Time Slot Information (Sleek horizontal row) */}
+                  <div className="py-2 px-2.5 rounded-xl bg-slate-50 border border-slate-100 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-600 font-medium">
+                    <div className="flex items-center gap-1.5">
                       <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                       <span>{formatDateDisplay(item.date)}</span>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
                       <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                      <span className="font-mono">
+                      <span className="font-mono text-[11px]">
                         {formatTimeDisplay(item.startTime)}
                         {item.endTime ? ` – ${formatTimeDisplay(item.endTime)}` : ''}
                       </span>
