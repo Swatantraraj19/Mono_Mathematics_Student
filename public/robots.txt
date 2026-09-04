@@ -1,0 +1,16 @@
+# robots.txt for Mono Mathematics Classes
+User-agent: *
+Allow: /
+Allow: /login
+Allow: /signup
+Allow: /forgot-password
+
+# Disallow authenticated/private student areas from indexing
+Disallow: /dashboard
+Disallow: /profile
+Disallow: /lectures
+Disallow: /live-classes
+Disallow: /verification-pending
+Disallow: /account-inactive
+
+Sitemap: https://monomathematics.com/sitemap.xml
