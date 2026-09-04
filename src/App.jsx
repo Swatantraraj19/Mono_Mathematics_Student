@@ -94,6 +94,7 @@ const AppRoutes = () => {
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/lectures" element={<LecturesPage />} />
         <Route path="/live-classes" element={<LiveClassesPage />} />
+        <Route path="/live" element={<Navigate to="/live-classes" replace />} />
       </Route>
 
       {/* Catch-all redirect */}

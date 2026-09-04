@@ -1,67 +1,272 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Helper function to check if user is authenticated
+
+    // ============================================================
+    // AUTH HELPERS
+    // ============================================================
+
     function isAuthenticated() {
       return request.auth != null;
     }
-    
-    // Helper function to check if user is accessing their own document
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
+
+    function userExists() {
+      return isAuthenticated()
+        && exists(
+          /databases/$(database)/documents/users/$(request.auth.uid)
+        );
     }
 
-    // 1. Student / User Profiles
+    function currentUser() {
+      return get(
+        /databases/$(database)/documents/users/$(request.auth.uid)
+      ).data;
+    }
+
+    function isActiveAdmin() {
+      return userExists()
+        && currentUser().role == "admin"
+        && currentUser().status == "active";
+    }
+
+    function isActiveStudent() {
+      return userExists()
+        && currentUser().role == "student"
+        && currentUser().status == "active";
+    }
+
+    function sameInstitute(instituteId) {
+      return userExists()
+        && currentUser().instituteId == instituteId;
+    }
+
+    function canRead(instituteId) {
+      return (
+        (isActiveAdmin() || isActiveStudent())
+        && sameInstitute(instituteId)
+      );
+    }
+
+
+    // ============================================================
+    // 1. USERS
+    // ============================================================
+
     match /users/{userId} {
-      allow read: if isAuthenticated();
-      // Allow initial registration
-      allow create: if isAuthenticated() && request.auth.uid == userId;
-      // Allow student to update their personal/academic info, but prevent role/status hijacking
-      allow update: if isOwner(userId) 
-        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'status', 'instituteId']))
-        || (isAuthenticated() && request.auth.token.role == 'admin');
-      allow delete: if isAuthenticated() && request.auth.token.role == 'admin';
+
+      // Own profile OR users from same institute for Admin
+      allow get: if isAuthenticated() && (
+        request.auth.uid == userId ||
+        (
+          isActiveAdmin() &&
+          resource.data.instituteId == currentUser().instituteId
+        )
+      );
+
+      // Do not expose the complete users collection
+      allow list: if isActiveAdmin();
+
+      // Self-registration: Student only (Supports BOTH Open & Approval Mode)
+      allow create: if isAuthenticated()
+        && request.auth.uid == userId
+        && request.resource.data.role == "student"
+        && request.resource.data.status in ["active", "pending"]
+        && request.resource.data.instituteId == "mono_math_01";
+
+      // Admin can create students only in own institute
+      allow create: if isActiveAdmin()
+        && request.resource.data.role == "student"
+        && request.resource.data.status in ["active", "pending"]
+        && request.resource.data.instituteId == currentUser().instituteId;
+
+      // Admin can update profile fields of users in own institute
+      allow update: if isActiveAdmin()
+        && resource.data.instituteId == currentUser().instituteId
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.instituteId == resource.data.instituteId;
+
+      // User can update only their own profile fields & academic selections
+      allow update: if isAuthenticated()
+        && request.auth.uid == userId
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.status == resource.data.status
+        && request.resource.data.instituteId == resource.data.instituteId
+        && request.resource.data.diff(resource.data)
+          .affectedKeys()
+          .hasOnly([
+            "name",
+            "displayName",
+            "photoURL",
+            "phone",
+            "classId",
+            "className",
+            "streamId",
+            "streamName",
+            "updatedAt"
+          ]);
+
+      // Admin can delete users only from own institute
+      allow delete: if isActiveAdmin()
+        && resource.data.instituteId == currentUser().instituteId;
     }
 
-    // 2. App Settings (Access Mode: open vs approval)
-    match /app_settings/{settingId} {
-      allow read: if true;
-      allow write: if isAuthenticated() && request.auth.token.role == 'admin';
-    }
 
-    // 3. Academic Structure (Classes & Streams)
+    // ============================================================
+    // 2. CLASSES
+    // ============================================================
+
     match /classes/{classId} {
-      allow read: if true;
-      allow write: if isAuthenticated() && request.auth.token.role == 'admin';
+
+      allow get, list: if isAuthenticated();
+
+      allow create: if isActiveAdmin()
+        && request.resource.data.instituteId == currentUser().instituteId;
+
+      allow update: if isActiveAdmin()
+        && resource.data.instituteId == currentUser().instituteId
+        && request.resource.data.instituteId == resource.data.instituteId;
+
+      allow delete: if isActiveAdmin()
+        && resource.data.instituteId == currentUser().instituteId;
     }
+
+
+    // ============================================================
+    // 3. STREAMS
+    // ============================================================
 
     match /streams/{streamId} {
-      allow read: if true;
-      allow write: if isAuthenticated() && request.auth.token.role == 'admin';
+
+      allow get, list: if isAuthenticated();
+
+      allow create: if isActiveAdmin()
+        && request.resource.data.instituteId == currentUser().instituteId;
+
+      allow update: if isActiveAdmin()
+        && resource.data.instituteId == currentUser().instituteId
+        && request.resource.data.instituteId == resource.data.instituteId;
+
+      allow delete: if isActiveAdmin()
+        && resource.data.instituteId == currentUser().instituteId;
     }
 
-    // 4. Subjects & Chapters
+
+    // ============================================================
+    // 4. SUBJECTS
+    // ============================================================
+
     match /subjects/{subjectId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated() && request.auth.token.role == 'admin';
+
+      allow get, list: if canRead(resource.data.instituteId);
+
+      allow create: if isActiveAdmin()
+        && request.resource.data.instituteId == currentUser().instituteId;
+
+      allow update: if isActiveAdmin()
+        && resource.data.instituteId == currentUser().instituteId
+        && request.resource.data.instituteId == resource.data.instituteId;
+
+      allow delete: if isActiveAdmin()
+        && resource.data.instituteId == currentUser().instituteId;
     }
+
+
+    // ============================================================
+    // 5. CLASS SUBJECTS
+    // ============================================================
+
+    match /classSubjects/{classSubjectId} {
+
+      allow get, list: if canRead(resource.data.instituteId);
+
+      allow create: if isActiveAdmin()
+        && request.resource.data.instituteId == currentUser().instituteId;
+
+      allow update: if isActiveAdmin()
+        && resource.data.instituteId == currentUser().instituteId
+        && request.resource.data.instituteId == resource.data.instituteId;
+
+      allow delete: if isActiveAdmin()
+        && resource.data.instituteId == currentUser().instituteId;
+    }
+
+
+    // ============================================================
+    // 6. CHAPTERS
+    // ============================================================
 
     match /chapters/{chapterId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated() && request.auth.token.role == 'admin';
+
+      allow get, list: if canRead(resource.data.instituteId);
+
+      allow create: if isActiveAdmin()
+        && request.resource.data.instituteId == currentUser().instituteId;
+
+      allow update: if isActiveAdmin()
+        && resource.data.instituteId == currentUser().instituteId
+        && request.resource.data.instituteId == resource.data.instituteId;
+
+      allow delete: if isActiveAdmin()
+        && resource.data.instituteId == currentUser().instituteId;
     }
 
-    // 5. Recorded Videos / Lectures
+
+    // ============================================================
+    // 7. VIDEOS
+    // ============================================================
+
     match /videos/{videoId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated() && request.auth.token.role == 'admin';
+
+      allow get, list: if canRead(resource.data.instituteId);
+
+      allow create: if isActiveAdmin()
+        && request.resource.data.instituteId == currentUser().instituteId;
+
+      allow update: if isActiveAdmin()
+        && resource.data.instituteId == currentUser().instituteId
+        && request.resource.data.instituteId == resource.data.instituteId;
+
+      allow delete: if isActiveAdmin()
+        && resource.data.instituteId == currentUser().instituteId;
     }
 
-    // 6. Live Classes
-    match /live_classes/{classId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated() && request.auth.token.role == 'admin';
+
+    // ============================================================
+    // 8. LIVE CLASSES
+    // ============================================================
+
+    match /liveClasses/{liveClassId} {
+
+      allow get, list: if canRead(resource.data.instituteId);
+
+      allow create: if isActiveAdmin()
+        && request.resource.data.instituteId == currentUser().instituteId;
+
+      allow update: if isActiveAdmin()
+        && resource.data.instituteId == currentUser().instituteId
+        && request.resource.data.instituteId == resource.data.instituteId;
+
+      allow delete: if isActiveAdmin()
+        && resource.data.instituteId == currentUser().instituteId;
+    }
+
+    // =========================================================================
+    // APP ACCESS SETTINGS
+    // =========================================================================
+    match /app_settings/{document} {
+      allow get, list: if true;
+      allow create, update, delete: if isActiveAdmin();
+    }
+
+    // ============================================================
+    // DEFAULT DENY
+    // ============================================================
+
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }
