@@ -402,7 +402,7 @@ export const LandingPage = () => {
               className="w-full lg:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold text-emerald-700 bg-white hover:bg-emerald-50 border border-emerald-300 shadow-2xs transition-all cursor-pointer whitespace-nowrap"
             >
               <MessageCircle className="w-3.5 h-3.5 text-emerald-600 fill-emerald-100" />
-              <span>Call Now</span>
+              <span>WhatsApp Now</span>
             </button>
           </div>
         </div>
