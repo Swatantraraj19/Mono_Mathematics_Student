@@ -18,7 +18,7 @@ import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
 import { SkeletonLoader } from '../../components/common/SkeletonLoader';
 import { EmptyState } from '../../components/common/EmptyState';
-import { formatDateDisplay, formatTimeDisplay } from '../../utils/dateUtils';
+import { formatDateDisplay, formatTimeDisplay, computeLiveClassStatus } from '../../utils/dateUtils';
 
 export const LiveClassesPage = () => {
   const { userProfile, isProfileComplete } = useAuth();
@@ -27,7 +27,7 @@ export const LiveClassesPage = () => {
 
   const [liveClasses, setLiveClasses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('upcoming'); // 'upcoming' | 'live' | 'completed' | 'all'
+  const [activeTab, setActiveTab] = useState('upcoming'); // 'upcoming' | 'completed' | 'all'
   const [copiedId, setCopiedId] = useState(null);
 
   useEffect(() => {
@@ -44,11 +44,6 @@ export const LiveClassesPage = () => {
         const list = await fetchStudentLiveClasses(studentClassId, studentStreamId);
         if (isMounted) {
           setLiveClasses(list);
-          // If any session is currently live, automatically highlight the Live tab
-          const hasLiveNow = list.some((c) => c.computedStatus === 'live');
-          if (hasLiveNow) {
-            setActiveTab('live');
-          }
         }
       } catch (err) {
         console.error('Error fetching live classes:', err);
@@ -59,8 +54,37 @@ export const LiveClassesPage = () => {
 
     loadLiveClasses();
 
-    // Auto refresh status every 60 seconds for live clock transitions
-    const interval = setInterval(loadLiveClasses, 60000);
+    // Re-evaluate live statuses in-memory every 30 seconds (0 network calls, 0 Firestore reads)
+    const interval = setInterval(() => {
+      if (!isMounted) return;
+      setLiveClasses((prevList) => {
+        let hasChanges = false;
+        const updated = prevList.map((c) => {
+          const newStatus = computeLiveClassStatus(c);
+          if (newStatus !== c.computedStatus) {
+            hasChanges = true;
+            return { ...c, computedStatus: newStatus };
+          }
+          return c;
+        });
+
+        if (!hasChanges) return prevList;
+
+        return updated.sort((a, b) => {
+          const statusWeight = { live: 1, upcoming: 2, completed: 3, cancelled: 4 };
+          const weightA = statusWeight[a.computedStatus] || 5;
+          const weightB = statusWeight[b.computedStatus] || 5;
+          if (weightA !== weightB) return weightA - weightB;
+
+          const timeA = new Date(`${a.date}T${a.startTime || '00:00'}`).getTime() || 0;
+          const timeB = new Date(`${b.date}T${b.startTime || '00:00'}`).getTime() || 0;
+          if (a.computedStatus === 'completed' || a.computedStatus === 'cancelled') {
+            return timeB - timeA;
+          }
+          return timeA - timeB;
+        });
+      });
+    }, 30000);
 
     return () => {
       isMounted = false;
@@ -76,17 +100,21 @@ export const LiveClassesPage = () => {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  // Filter based on active tab
+  // Filter based on active tab: upcoming includes currently live sessions
   const filteredClasses = liveClasses.filter((item) => {
     if (activeTab === 'all') return true;
-    if (activeTab === 'live') return item.computedStatus === 'live';
-    if (activeTab === 'upcoming') return item.computedStatus === 'upcoming';
-    if (activeTab === 'completed') return item.computedStatus === 'completed';
+    if (activeTab === 'upcoming') {
+      return item.computedStatus === 'upcoming' || item.computedStatus === 'live';
+    }
+    if (activeTab === 'completed') {
+      return item.computedStatus === 'completed' || item.computedStatus === 'cancelled';
+    }
     return true;
   });
 
   const liveNowCount = liveClasses.filter((c) => c.computedStatus === 'live').length;
-  const upcomingCount = liveClasses.filter((c) => c.computedStatus === 'upcoming').length;
+  const upcomingTabCount = liveClasses.filter((c) => c.computedStatus === 'upcoming' || c.computedStatus === 'live').length;
+  const completedTabCount = liveClasses.filter((c) => c.computedStatus === 'completed' || c.computedStatus === 'cancelled').length;
 
   if (!isProfileComplete) {
     return (
@@ -135,12 +163,11 @@ export const LiveClassesPage = () => {
         )}
       </div>
 
-      {/* Filter Tabs */}
+      {/* Filter Tabs (3 Tabs: Upcoming, Completed, All Sessions) */}
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
         {[
-          { key: 'upcoming', label: 'Upcoming', count: upcomingCount },
-          { key: 'live', label: 'Live Now', count: liveNowCount, hasPulse: liveNowCount > 0 },
-          { key: 'completed', label: 'Completed', count: liveClasses.filter((c) => c.computedStatus === 'completed').length },
+          { key: 'upcoming', label: 'Upcoming', count: upcomingTabCount, hasPulse: liveNowCount > 0 },
+          { key: 'completed', label: 'Completed', count: completedTabCount },
           { key: 'all', label: 'All Sessions', count: liveClasses.length },
         ].map((tab) => {
           const isSelected = activeTab === tab.key;
@@ -179,19 +206,15 @@ export const LiveClassesPage = () => {
         <EmptyState
           icon={Radio}
           title={
-            activeTab === 'live'
-              ? 'No Live Sessions Right Now'
-              : activeTab === 'upcoming'
+            activeTab === 'upcoming'
               ? 'No Upcoming Classes Scheduled'
               : activeTab === 'completed'
               ? 'No Past Completed Sessions'
               : 'No Live Classes Found'
           }
           description={
-            activeTab === 'live'
-              ? 'There are no active live classes broadcasting at this moment. Check the Upcoming tab for scheduled sessions.'
-              : activeTab === 'upcoming'
-              ? 'You have no pending live classes scheduled at this moment. Check back later!'
+            activeTab === 'upcoming'
+              ? 'You have no live classes scheduled at this moment. Check back later!'
               : activeTab === 'completed'
               ? 'You have not completed any live class sessions yet.'
               : 'There are no live classes scheduled for you right now.'
