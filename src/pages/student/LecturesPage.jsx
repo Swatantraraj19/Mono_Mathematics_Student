@@ -54,6 +54,16 @@ export const LecturesPage = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const modalHistoryPushedRef = useRef(false);
 
+  // Anti-Screen-Recording Dynamic Watermark Position Ticker (shifts every 15s)
+  const [watermarkPosIndex, setWatermarkPosIndex] = useState(0);
+  useEffect(() => {
+    if (!playingVideo) return;
+    const interval = setInterval(() => {
+      setWatermarkPosIndex((prev) => (prev + 1) % 4);
+    }, 15000);
+    return () => clearInterval(interval);
+  }, [playingVideo]);
+
   // Play Video: sets state & pushes silent history entry so Back button closes modal
   const handlePlayVideo = useCallback((video) => {
     setPlayingVideo(video);
@@ -609,6 +619,25 @@ export const LecturesPage = () => {
               onTouchStart={(e) => { e.preventDefault(); e.stopPropagation(); }}
               onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
             />
+
+            {/* Anti-Screen-Recording Dynamic Student Watermark (Compact Pill Badge, Reduced Darkness) */}
+            <div
+              className={`absolute z-25 pointer-events-none select-none transition-all duration-1000 ease-in-out ${
+                watermarkPosIndex === 0
+                  ? 'top-8 right-3 sm:top-10 sm:right-6'
+                  : watermarkPosIndex === 1
+                  ? 'bottom-12 left-3 sm:bottom-14 sm:left-6'
+                  : watermarkPosIndex === 2
+                  ? 'top-1/4 left-4 sm:left-10'
+                  : 'bottom-1/3 right-4 sm:right-10'
+              }`}
+            >
+              <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/10 backdrop-blur-[0.5px] border border-white/5 text-white/45 text-[9px] sm:text-[10px] font-mono font-medium shadow-2xs">
+                <span className="font-semibold">{userProfile?.name || 'Student'}</span>
+                <span>•</span>
+                <span>{userProfile?.email || userProfile?.phone || ''}</span>
+              </div>
+            </div>
           </div>
         </Modal>
       )}
