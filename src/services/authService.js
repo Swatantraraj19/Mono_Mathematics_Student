@@ -215,7 +215,7 @@ export const authService = {
   /**
    * Update Student Profile (Personal + Academic Information).
    */
-  async updateProfile(uid, { name, classId, className, streamId, streamName }) {
+  async updateProfile(uid, { name, classId, className, streamId, streamName, board, boardName }) {
     if (!uid) throw new Error('User ID required.');
 
     const docRef = doc(db, USERS_COLLECTION, uid);
@@ -225,6 +225,8 @@ export const authService = {
       className: className || null,
       streamId: streamId || null,
       streamName: streamName || null,
+      board: board || null,
+      boardName: boardName || null,
       updatedAt: serverTimestamp(),
     };
 

@@ -24,6 +24,7 @@ export const Dashboard = () => {
 
   const studentClassId = userProfile?.classId;
   const studentStreamId = userProfile?.streamId;
+  const studentBoard = userProfile?.board;
 
   useEffect(() => {
     let isMounted = true;
@@ -36,7 +37,7 @@ export const Dashboard = () => {
 
       setLoading(true);
       try {
-        const subjectsData = await fetchStudentSubjects(studentClassId, studentStreamId);
+        const subjectsData = await fetchStudentSubjects(studentClassId, studentStreamId, undefined, studentBoard);
         if (isMounted) {
           setSubjects(subjectsData);
         }
@@ -52,7 +53,7 @@ export const Dashboard = () => {
     return () => {
       isMounted = false;
     };
-  }, [studentClassId, studentStreamId]);
+  }, [studentClassId, studentStreamId, studentBoard]);
 
   return (
     <div className="space-y-6 animate-fadeIn select-none">
@@ -79,7 +80,7 @@ export const Dashboard = () => {
         </div>
       </div>
 
-      {/* 2. Incomplete Profile Alert (If student has not selected class) */}
+      {/* 2. Incomplete Profile Alert (If student has not selected board or class) */}
       {!isProfileComplete && (
         <div className="p-4 sm:p-5 rounded-2xl bg-amber-50 border border-amber-200 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-pulse">
           <div className="flex items-start gap-3">
@@ -91,7 +92,7 @@ export const Dashboard = () => {
                 Please complete your profile first
               </h2>
               <p className="text-xs text-amber-700 mt-0.5">
-                Select your class (and stream for Class 11–12) from your profile to access learning content.
+                Select your educational board and class (and stream for Class 11–12) to access learning content.
               </p>
             </div>
           </div>
@@ -112,9 +113,14 @@ export const Dashboard = () => {
             </div>
             <div>
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                Enrolled Academic Class
+                Enrolled Academic Details
               </span>
-              <div className="flex items-center gap-2 mt-0.5">
+              <div className="flex flex-wrap items-center gap-2 mt-0.5">
+                {userProfile.board && (
+                  <Badge variant="neutral" size="sm" className="font-bold">
+                    {userProfile.board === 'BSEB' ? 'BSEB (Bihar Board)' : userProfile.board}
+                  </Badge>
+                )}
                 <span className="text-base sm:text-lg font-bold text-slate-900">
                   {userProfile.className}
                 </span>

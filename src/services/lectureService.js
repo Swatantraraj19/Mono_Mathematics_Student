@@ -66,7 +66,12 @@ export const fetchStreams = async (instituteId = INSTITUTE_ID) => {
       id: docSnap.id,
       ...docSnap.data(),
     }));
-    return list.sort((a, b) => (Number(a.orderIndex) || 0) - (Number(b.orderIndex) || 0));
+    const STREAM_ORDER = { science: 1, commerce: 2, arts: 3 };
+    return list.sort((a, b) => {
+      const orderA = STREAM_ORDER[(a?.name || '').trim().toLowerCase()] ?? (Number(a.orderIndex) || 0);
+      const orderB = STREAM_ORDER[(b?.name || '').trim().toLowerCase()] ?? (Number(b.orderIndex) || 0);
+      return orderA - orderB;
+    });
   } catch (error) {
     console.error('Error fetching streams:', error);
     return [];
@@ -74,9 +79,9 @@ export const fetchStreams = async (instituteId = INSTITUTE_ID) => {
 };
 
 /**
- * Fetch subjects mapped to the student's selected class (and stream for 11-12).
+ * Fetch subjects mapped to the student's selected class (and stream for 11-12) and board.
  */
-export const fetchStudentSubjects = async (classId, streamId = null, instituteId = INSTITUTE_ID) => {
+export const fetchStudentSubjects = async (classId, streamId = null, instituteId = INSTITUTE_ID, board = null) => {
   if (!classId) return [];
 
   try {
@@ -94,6 +99,10 @@ export const fetchStudentSubjects = async (classId, streamId = null, instituteId
 
     if (streamId) {
       list = list.filter((s) => !s.streamId || s.streamId === streamId);
+    }
+
+    if (board) {
+      list = list.filter((s) => !s.board || s.board === 'ALL' || s.board === board);
     }
 
     return list.sort((a, b) => (a.subjectName || '').localeCompare(b.subjectName || ''));
@@ -160,9 +169,9 @@ export const fetchStudentVideos = async (chapterId, instituteId = INSTITUTE_ID) 
 };
 
 /**
- * Search video lectures within the student's enrolled syllabus.
+ * Search video lectures within the student's enrolled syllabus and board.
  */
-export const searchStudentLectures = async (classId, streamId = null, searchTerm = '', instituteId = INSTITUTE_ID) => {
+export const searchStudentLectures = async (classId, streamId = null, searchTerm = '', instituteId = INSTITUTE_ID, board = null) => {
   if (!classId || !searchTerm.trim()) return [];
 
   const term = searchTerm.trim().toLowerCase();
@@ -182,6 +191,10 @@ export const searchStudentLectures = async (classId, streamId = null, searchTerm
 
     if (streamId) {
       list = list.filter((v) => !v.streamId || v.streamId === streamId);
+    }
+
+    if (board) {
+      list = list.filter((v) => !v.board || v.board === 'ALL' || v.board === board);
     }
 
     return list.filter((v) => {

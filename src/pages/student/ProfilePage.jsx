@@ -28,6 +28,7 @@ export const ProfilePage = () => {
 
   // Form State
   const [name, setName] = useState('');
+  const [selectedBoard, setSelectedBoard] = useState('');
   const [selectedClassId, setSelectedClassId] = useState('');
   const [selectedStreamId, setSelectedStreamId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -37,6 +38,7 @@ export const ProfilePage = () => {
   useEffect(() => {
     if (userProfile) {
       setName(userProfile.name || '');
+      setSelectedBoard(userProfile.board || '');
       setSelectedClassId(userProfile.classId || '');
       setSelectedStreamId(userProfile.streamId || '');
     }
@@ -77,6 +79,11 @@ export const ProfilePage = () => {
     currentSelectedClassObj?.name?.includes('12')
   );
 
+  const handleBoardChange = (e) => {
+    setSelectedBoard(e.target.value);
+    if (errors.board) setErrors((prev) => ({ ...prev, board: null }));
+  };
+
   const handleClassChange = (e) => {
     const newClassId = e.target.value;
     setSelectedClassId(newClassId);
@@ -107,6 +114,10 @@ export const ProfilePage = () => {
       newErrors.name = 'Please enter a valid name (letters only).';
     }
 
+    if (!selectedBoard) {
+      newErrors.board = 'Please select your educational board.';
+    }
+
     if (!selectedClassId) {
       newErrors.classId = 'Please select your academic class.';
     }
@@ -129,8 +140,15 @@ export const ProfilePage = () => {
       const classObj = classesList.find((c) => c.id === selectedClassId);
       const streamObj = streamsList.find((s) => s.id === selectedStreamId);
 
+      const boardNameMap = {
+        CBSE: 'CBSE',
+        BSEB: 'BSEB (Bihar Board)',
+      };
+
       await updateProfile({
         name: name.trim(),
+        board: selectedBoard,
+        boardName: boardNameMap[selectedBoard] || selectedBoard,
         classId: selectedClassId,
         className: classObj?.name || null,
         streamId: requiresStream ? selectedStreamId : null,
@@ -150,6 +168,7 @@ export const ProfilePage = () => {
   const handleCancel = () => {
     if (userProfile) {
       setName(userProfile.name || '');
+      setSelectedBoard(userProfile.board || '');
       setSelectedClassId(userProfile.classId || '');
       setSelectedStreamId(userProfile.streamId || '');
     }
@@ -197,6 +216,11 @@ export const ProfilePage = () => {
               <Badge variant="primary" size="sm">
                 Student
               </Badge>
+              {userProfile?.board && (
+                <Badge variant="neutral" size="sm" className="font-semibold">
+                  {userProfile.board === 'BSEB' ? 'BSEB (Bihar Board)' : userProfile.board}
+                </Badge>
+              )}
               <Badge variant={userProfile?.status === 'active' ? 'active' : 'pending'} size="sm" dot>
                 {userProfile?.status === 'active' ? 'Active' : 'Pending'}
               </Badge>
@@ -255,6 +279,22 @@ export const ProfilePage = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-3.5">
               <div>
                 <Select
+                  label="Educational Board"
+                  value={selectedBoard}
+                  onChange={handleBoardChange}
+                  disabled={!isEditing || isSubmitting}
+                  error={errors.board}
+                  placeholder="Select Board"
+                  options={[
+                    { value: 'CBSE', label: 'CBSE' },
+                    { value: 'BSEB', label: 'BSEB (Bihar Board)' },
+                  ]}
+                  required
+                />
+              </div>
+
+              <div>
+                <Select
                   label="Academic Class"
                   value={selectedClassId}
                   onChange={handleClassChange}
@@ -270,7 +310,7 @@ export const ProfilePage = () => {
               </div>
 
               {requiresStream && (
-                <div className="animate-fadeIn">
+                <div className="animate-fadeIn sm:col-span-2">
                   <Select
                     label="Academic Stream"
                     value={selectedStreamId}

@@ -49,9 +49,11 @@ export const Header = ({ onMenuClick }) => {
 
       {/* Right: Enrolled Class Badge & Student Info */}
       <div className="flex items-center gap-2.5 shrink-0">
-        {userProfile?.className && (
+        {(userProfile?.className || userProfile?.board) && (
           <span className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-50 text-primary-700 border border-indigo-100">
-            {userProfile.className} {userProfile.streamName ? `• ${userProfile.streamName}` : ''}
+            {userProfile.className || 'Class'}
+            {userProfile.streamName ? ` • ${userProfile.streamName}` : ''}
+            {userProfile.board ? ` • ${userProfile.board === 'BSEB' ? 'BSEB (Bihar Board)' : userProfile.board}` : ''}
           </span>
         )}
 

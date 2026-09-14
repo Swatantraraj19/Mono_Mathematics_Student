@@ -11,9 +11,9 @@ const INSTITUTE_ID = 'mono_math_01';
 const LIVE_CLASSES_COLLECTION = 'liveClasses';
 
 /**
- * Fetch live classes strictly filtered for the student's assigned class and stream.
+ * Fetch live classes strictly filtered for the student's assigned class, stream, and board.
  */
-export const fetchStudentLiveClasses = async (classId, streamId = null, instituteId = INSTITUTE_ID) => {
+export const fetchStudentLiveClasses = async (classId, streamId = null, instituteId = INSTITUTE_ID, board = null) => {
   if (!classId) return [];
 
   try {
@@ -37,6 +37,11 @@ export const fetchStudentLiveClasses = async (classId, streamId = null, institut
     // Stream filter for Class 11 and 12
     if (streamId) {
       list = list.filter((item) => !item.streamId || item.streamId === streamId);
+    }
+
+    // Board filter
+    if (board) {
+      list = list.filter((item) => !item.board || item.board === 'ALL' || item.board === board);
     }
 
     // Sort by status priority: live (1) -> upcoming (2) -> completed (3) -> cancelled (4)

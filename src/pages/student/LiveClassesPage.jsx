@@ -24,6 +24,7 @@ export const LiveClassesPage = () => {
   const { userProfile, isProfileComplete } = useAuth();
   const studentClassId = userProfile?.classId;
   const studentStreamId = userProfile?.streamId;
+  const studentBoard = userProfile?.board;
 
   const [liveClasses, setLiveClasses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -41,7 +42,7 @@ export const LiveClassesPage = () => {
 
       setLoading(true);
       try {
-        const list = await fetchStudentLiveClasses(studentClassId, studentStreamId);
+        const list = await fetchStudentLiveClasses(studentClassId, studentStreamId, undefined, studentBoard);
         if (isMounted) {
           setLiveClasses(list);
         }
@@ -90,7 +91,7 @@ export const LiveClassesPage = () => {
       isMounted = false;
       clearInterval(interval);
     };
-  }, [studentClassId, studentStreamId]);
+  }, [studentClassId, studentStreamId, studentBoard]);
 
   const handleCopyLink = (item) => {
     if (!item.zoomUrl) return;

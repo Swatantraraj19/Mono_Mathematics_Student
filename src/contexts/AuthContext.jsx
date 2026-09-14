@@ -140,6 +140,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const isProfileComplete = Boolean(
+    userProfile?.board &&
     userProfile?.classId &&
     (!userProfile.className?.includes('11') && !userProfile.className?.includes('12')
       ? true

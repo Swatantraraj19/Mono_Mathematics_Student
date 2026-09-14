@@ -31,6 +31,7 @@ export const LecturesPage = () => {
   const { userProfile, isProfileComplete } = useAuth();
   const studentClassId = userProfile?.classId;
   const studentStreamId = userProfile?.streamId;
+  const studentBoard = userProfile?.board;
 
   // Master State
   const [subjects, setSubjects] = useState([]);
@@ -198,7 +199,7 @@ export const LecturesPage = () => {
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
-  // Load subjects mapped to student's class and stream
+  // Load subjects mapped to student's class, stream, and board
   const loadSubjects = useCallback(async () => {
     if (!studentClassId) {
       setLoadingSubjects(false);
@@ -207,7 +208,7 @@ export const LecturesPage = () => {
 
     setLoadingSubjects(true);
     try {
-      const subs = await fetchStudentSubjects(studentClassId, studentStreamId);
+      const subs = await fetchStudentSubjects(studentClassId, studentStreamId, undefined, studentBoard);
       setSubjects(subs);
       if (subs.length > 0) {
         const matched = subs.find((s) => s.id === initialSubjectId);
@@ -220,9 +221,10 @@ export const LecturesPage = () => {
     } finally {
       setLoadingSubjects(false);
     }
-  }, [studentClassId, studentStreamId, initialSubjectId]);
+  }, [studentClassId, studentStreamId, studentBoard, initialSubjectId]);
 
   useEffect(() => {
+    setChapterVideos({});
     loadSubjects();
   }, [loadSubjects]);
 
@@ -304,7 +306,7 @@ export const LecturesPage = () => {
     setIsSearching(true);
     const timeoutId = setTimeout(async () => {
       try {
-        const results = await searchStudentLectures(studentClassId, studentStreamId, trimmed);
+        const results = await searchStudentLectures(studentClassId, studentStreamId, trimmed, undefined, studentBoard);
         if (isMounted) {
           setSearchResults(results);
         }
@@ -319,7 +321,7 @@ export const LecturesPage = () => {
       isMounted = false;
       clearTimeout(timeoutId);
     };
-  }, [searchQuery, studentClassId, studentStreamId]);
+  }, [searchQuery, studentClassId, studentStreamId, studentBoard]);
 
   // Active Subject & Chapter helpers
   const activeSubjectObj = useMemo(() => {
